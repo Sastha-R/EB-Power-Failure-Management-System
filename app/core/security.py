@@ -1,8 +1,9 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
+
 import jwt
 from pwdlib import PasswordHash
-from app.core.config import settings
 
+from app.core.config import settings
 
 password_hash = PasswordHash.recommended()
 
@@ -20,58 +21,42 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 # Access token generation
-def create_access_token(
-    user_id: int,
-    user_type: str,
-    role: str | None = None
-) -> str:
+def create_access_token(user_id: int, user_type: str, role: str | None = None) -> str:
 
-    expire = datetime.now(timezone.utc) + timedelta(
-        minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
-    )
+    expire = datetime.now(UTC) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
     payload = {
         "sub": str(user_id),
         "user_type": user_type,
         "token_type": "access",
-        "exp": expire
+        "exp": expire,
     }
 
     if role:
         payload["role"] = role
 
     return jwt.encode(
-        payload,
-        settings.JWT_SECRET_KEY,
-        algorithm=settings.JWT_ALGORITHM
+        payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
     )
 
 
 # Refresh token generation
-def create_refresh_token(
-    user_id: int,
-    user_type: str,
-    role: str | None = None
-) -> str:
+def create_refresh_token(user_id: int, user_type: str, role: str | None = None) -> str:
 
-    expire = datetime.now(timezone.utc) + timedelta(
-        days=settings.REFRESH_TOKEN_EXPIRE_DAYS
-    )
+    expire = datetime.now(UTC) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
 
     payload = {
         "sub": str(user_id),
         "user_type": user_type,
         "token_type": "refresh",
-        "exp": expire
+        "exp": expire,
     }
 
     if role:
         payload["role"] = role
 
     return jwt.encode(
-        payload,
-        settings.JWT_SECRET_KEY,
-        algorithm=settings.JWT_ALGORITHM
+        payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
     )
 
 
@@ -79,7 +64,5 @@ def create_refresh_token(
 def decode_token(token: str) -> dict:
 
     return jwt.decode(
-        token,
-        settings.JWT_SECRET_KEY,
-        algorithms=[settings.JWT_ALGORITHM]
+        token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
     )

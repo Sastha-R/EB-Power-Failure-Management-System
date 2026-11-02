@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class CustomerRepositoryInterface(ABC):
-
     @abstractmethod
     async def create_customer(self, db: AsyncSession, customer_data: dict):
         pass

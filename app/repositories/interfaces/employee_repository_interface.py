@@ -4,7 +4,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class EmployeeRepositoryInterface(ABC):
-
     @abstractmethod
     async def create_employee(self, db: AsyncSession, employee_data: dict):
         pass

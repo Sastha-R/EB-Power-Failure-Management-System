@@ -1,16 +1,15 @@
 from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class AssignmentCreate(BaseModel):
-
     complaint_id: int = Field(gt=0)
     lineman_id: int = Field(gt=0)
     remarks: str | None = None
 
 
 class AssignmentResponse(BaseModel):
-
     id: int
     complaint_id: int
     lineman_id: int
