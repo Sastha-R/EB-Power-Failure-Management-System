@@ -8,6 +8,8 @@ from app.core.security import (
     create_access_token,
     create_refresh_token
 )
+import jwt
+from app.core.security import decode_token
 
 
 class AuthService(AuthServiceInterface):
@@ -52,5 +54,54 @@ class AuthService(AuthServiceInterface):
         return {
             "access_token": access_token,
             "refresh_token": refresh_token,
+            "token_type": "bearer"
+        }
+
+    async def refresh_access_token(
+    self,
+    db: AsyncSession,
+    refresh_token: str
+    ):
+        try:
+            payload = decode_token(refresh_token)
+
+            if payload.get("token_type") != "refresh":
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid refresh token"
+                )
+
+            if payload.get("user_type") != "employee":
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid user type"
+                )
+
+            employee_id = int(payload.get("sub"))
+
+        except (jwt.InvalidTokenError, ValueError, TypeError):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired refresh token"
+            )
+
+        employee = await self.employee_repository.get_employee_by_id(
+            db, employee_id
+        )
+
+        if not employee or not employee.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Employee not found or inactive"
+            )
+
+        new_access_token = create_access_token(
+            user_id=employee.id,
+            user_type="employee",
+            role=employee.role
+        )
+
+        return {
+            "access_token": new_access_token,
             "token_type": "bearer"
         }

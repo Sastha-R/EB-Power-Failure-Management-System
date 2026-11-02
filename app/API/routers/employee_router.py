@@ -1,11 +1,10 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.database.database import get_db
 from app.schemas.employee_schema import EmployeeCreate, EmployeeResponse
 from app.services.implementations.employee_service import EmployeeService
-from app.API.dependencies.employee_dependency import get_employee_service
-from app.API.dependencies.auth_dependency import required_admin
+from app.api.dependencies.employee_dependency import get_employee_service
+from app.api.dependencies.auth_dependency import required_admin
 
 
 employee_router = APIRouter(
