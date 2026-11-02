@@ -1,0 +1,68 @@
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.models import Employee
+from app.repositories.interfaces.employee_repository_interface import (
+    EmployeeRepositoryInterface
+)
+
+
+class EmployeeRepository(EmployeeRepositoryInterface):
+
+    async def create_employee(
+        self,
+        db: AsyncSession,
+        employee_data: dict
+    ):
+        employee = Employee(**employee_data)
+
+        db.add(employee)
+
+        await db.commit()
+
+        await db.refresh(employee)
+
+        return employee
+
+
+    async def get_employee_by_id(
+        self,
+        db: AsyncSession,
+        employee_id: int
+    ):
+        result = await db.execute(
+            select(Employee).where(Employee.id == employee_id)
+        )
+
+        return result.scalar_one_or_none()
+
+    async def get_employee_by_email(
+        self,
+        db: AsyncSession,
+        email: str
+    ):
+        result = await db.execute(
+            select(Employee).where(Employee.email == email)
+        )
+
+        return result.scalar_one_or_none()
+
+    async def get_employee_by_username(
+        self,
+        db: AsyncSession,
+        username: str
+    ):
+        result = await db.execute(
+            select(Employee).where(Employee.username == username)
+        )
+
+        return result.scalar_one_or_none()
+
+    async def get_all_employees(
+        self,
+        db: AsyncSession
+    ):
+        result = await db.execute(
+            select(Employee).order_by(Employee.id)
+        )
+
+        return result.scalars().all()
