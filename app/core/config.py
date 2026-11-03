@@ -13,6 +13,10 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int
     REFRESH_TOKEN_EXPIRE_DAYS: int
 
+    COMPLAINT_UPLOAD_DIR: str
+    REPAIR_UPLOAD_DIR: str
+    MAX_FILE_SIZE: int
+
     model_config = SettingsConfigDict(env_file=".env")
 
 

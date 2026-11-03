@@ -12,4 +12,4 @@ from app.schemas.complaint_schema import (
 )
 from app.schemas.customer_schema import CustomerCreate, CustomerResponse
 from app.schemas.employee_schema import EmployeeCreate, EmployeeResponse
-from app.schemas.repair_schema import RepairCreate, RepairResponse, RepairUpdate
+from app.schemas.repair_schema import RepairResponse,RepairCreate

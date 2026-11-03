@@ -14,4 +14,27 @@ class ComplaintServiceInterface(ABC):
     ):
         pass
 
-    
+    @abstractmethod
+    async def get_all_complaints(
+        self,
+        db: AsyncSession
+    ):
+        pass
+
+    @abstractmethod
+    async def get_assigned_complaints(
+        self,
+        db: AsyncSession,
+        lineman_id: int
+    ):
+        pass
+
+    @abstractmethod
+    async def close_complaint(self, db, complaint_id: int):
+        pass
+
+    @abstractmethod
+    async def upload_complaint_image(
+        self, db, complaint_id: int, customer_id: int, image
+    ):
+        pass

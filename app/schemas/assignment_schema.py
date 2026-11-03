@@ -17,3 +17,5 @@ class AssignmentResponse(BaseModel):
     assigned_at: datetime
     remarks: str | None
     model_config = ConfigDict(from_attributes=True)
+
+

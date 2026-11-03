@@ -30,10 +30,12 @@ async def get_current_employee(
             )
 
         employee_id = int(payload.get("sub"))
+        
 
-    except Exception:
+    except (jwt.InvalidTokenError, ValueError, TypeError):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token"
         )
 
     repository = EmployeeRepository()
@@ -92,3 +94,15 @@ async def get_current_customer(
         )
 
     return customer
+
+
+async def required_lineman(
+    current_employee=Depends(get_current_employee)
+):
+    if current_employee.role != "lineman":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Lineman access required"
+        )
+
+    return current_employee
