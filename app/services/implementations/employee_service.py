@@ -56,10 +56,18 @@ class EmployeeService(EmployeeServiceInterface):
 
         return employee
 
-    async def get_all_employees(self, db: AsyncSession):
-
-        return await self.employee_repository.get_all_employees(db)
-
+    async def get_all_employees(
+        self,
+        db: AsyncSession,
+        limit: int,
+        offset: int,
+    ):
+        return await self.employee_repository.get_all_employees(
+            db,
+            limit,
+            offset,
+        )
+    
     async def deactivate_employee(
         self,
         db: AsyncSession,

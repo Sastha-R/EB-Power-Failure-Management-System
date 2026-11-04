@@ -36,8 +36,28 @@ class CustomerRepository(CustomerRepositoryInterface):
 
         return result.scalar_one_or_none()
 
-    async def get_all_customers(self, db: AsyncSession):
-
-        result = await db.execute(select(Customer).order_by(Customer.id))
+    async def get_all_customers(
+        self,
+        db: AsyncSession,
+        limit: int,
+        offset: int,
+    ):
+        result = await db.execute(
+            select(Customer)
+            .limit(limit)
+            .offset(offset)
+        )
 
         return result.scalars().all()
+
+    async def deactivate_customer(
+        self,
+        db: AsyncSession,
+        customer,
+    ):
+        customer.is_active = False
+
+        await db.commit()
+        await db.refresh(customer)
+
+        return customer

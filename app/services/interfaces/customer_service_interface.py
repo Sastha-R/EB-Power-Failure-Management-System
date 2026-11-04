@@ -13,5 +13,18 @@ class CustomerServiceInterface(ABC):
         pass
 
     @abstractmethod
-    async def get_all_customers(self, db: AsyncSession):
+    async def get_all_customers(
+        self,
+        db: AsyncSession,
+        limit: int,
+        offset: int,
+    ):
+        pass
+
+    @abstractmethod
+    async def deactivate_customer(
+        self,
+        db: AsyncSession,
+        customer_id: int,
+    ):
         pass

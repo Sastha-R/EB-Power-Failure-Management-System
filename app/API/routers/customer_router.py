@@ -8,7 +8,8 @@ from app.schemas.customer_schema import CustomerCreate, CustomerResponse
 from app.services.implementations.customer_service import CustomerService
 from typing import Annotated
 from app.models.employee import Employee
-
+from app.api.dependencies.auth_dependency import required_admin
+from fastapi import Query
 customer_router = APIRouter(prefix="/customers", tags=["Customers"])
 
 
@@ -23,13 +24,19 @@ async def create_customer(
     return await customer_service.create_customer(db, customer_data)
 
 
-@customer_router.get("/", response_model=list[CustomerResponse])
+@customer_router.get("/")
 async def get_all_customers(
-    db: Annotated[AsyncSession , Depends(get_db)],
-    customer_service:Annotated [CustomerService , Depends(get_customer_service)],
-    current_admin: Annotated[Employee, Depends(required_admin)]
-    ):
-    return await customer_service.get_all_customers(db)
+    limit: int = Query(default=10, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    db: AsyncSession = Depends(get_db),
+    customer_service: CustomerService = Depends(get_customer_service),
+    current_admin: Employee = Depends(required_admin),
+):
+    return await customer_service.get_all_customers(
+        db,
+        limit,
+        offset,
+    )
 
 
 @customer_router.get("/{customer_id}", response_model=CustomerResponse)
@@ -41,3 +48,16 @@ async def get_customer_by_id(
 
 ):
     return await customer_service.get_customer_by_id(db, customer_id)
+
+
+@customer_router.delete("/{customer_id}")
+async def deactivate_customer(
+    customer_id: int,
+    db: AsyncSession = Depends(get_db),
+    customer_service: CustomerService = Depends(get_customer_service),
+    current_admin: Employee = Depends(required_admin),
+):
+    return await customer_service.deactivate_customer(
+        db,
+        customer_id,
+    )

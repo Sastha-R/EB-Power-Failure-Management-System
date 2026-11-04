@@ -9,7 +9,10 @@ from app.exceptions.custom_exceptions.customer_exceptions import (
 )
 from app.repositories.implementations.customer_repository import CustomerRepository
 from app.services.interfaces.customer_service_interface import CustomerServiceInterface
-
+from app.exceptions.custom_exceptions.customer_exceptions import (
+    CustomerNotFoundError,
+    CustomerAlreadyInactiveError,
+)
 
 class CustomerService(CustomerServiceInterface):
     def __init__(self, customer_repository: CustomerRepository):
@@ -49,6 +52,36 @@ class CustomerService(CustomerServiceInterface):
 
         return customer
 
-    async def get_all_customers(self, db: AsyncSession):
+    async def get_all_customers(
+        self,
+        db: AsyncSession,
+        limit: int,
+        offset: int,
+    ):
+        return await self.customer_repository.get_all_customers(
+            db,
+            limit,
+            offset,
+        )
 
-        return await self.customer_repository.get_all_customers(db)
+
+    async def deactivate_customer(
+        self,
+        db: AsyncSession,
+        customer_id: int,
+    ):
+        customer = await self.customer_repository.get_customer_by_id(
+            db,
+            customer_id,
+        )
+
+        if not customer:
+            raise CustomerNotFoundError()
+
+        if not customer.is_active:
+            raise CustomerAlreadyInactiveError()
+
+        return await self.customer_repository.deactivate_customer(
+            db,
+            customer,
+        )

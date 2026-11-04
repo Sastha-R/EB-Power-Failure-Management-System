@@ -34,10 +34,19 @@ class EmployeeRepository(EmployeeRepositoryInterface):
 
         return result.scalar_one_or_none()
 
-    async def get_all_employees(self, db: AsyncSession):
-        result = await db.execute(select(Employee).order_by(Employee.id))
+    async def get_all_employees(
+            self,
+            db: AsyncSession,
+            limit: int,
+            offset: int,
+        ):
+            result = await db.execute(
+                select(Employee)
+                .limit(limit)
+                .offset(offset)
+            )
 
-        return result.scalars().all()
+            return result.scalars().all()
 
 
     async def deactivate_employee(

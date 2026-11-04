@@ -13,7 +13,12 @@ class EmployeeServiceInterface(ABC):
         pass
 
     @abstractmethod
-    async def get_all_employees(self, db: AsyncSession):
+    async def get_all_employees(
+        self,
+        db: AsyncSession,
+        limit: int,
+        offset: int,
+    ):
         pass
 
     @abstractmethod

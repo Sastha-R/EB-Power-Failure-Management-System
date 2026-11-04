@@ -8,7 +8,7 @@ from app.api.routers.customer_router import customer_router
 from app.api.routers.employee_router import employee_router
 from app.api.routers.health_router import health_router
 from app.api.routers.repair_router import repair_router
-from app.core.logging_config import setup_logging
+from app.utils.logging_config import setup_logging
 from app.exceptions.custom_exceptions.base_exception import BaseCustomException
 from app.exceptions.exception_handlers import (
     custom_exception_handler,
@@ -25,7 +25,9 @@ import logging
 from app.database.database import engine
 from app.utils.startup import check_admin_exists
 
-
+from app.exceptions.exception_registration import (
+    register_exception_handlers,
+)
 
 setup_logging()
 @asynccontextmanager
@@ -54,29 +56,8 @@ app = FastAPI(
 
 app.add_middleware(RequestLoggingMiddleware)
 
-app.add_exception_handler(
-    HTTPException,
-    http_exception_handler,
-)
 
-app.add_exception_handler(
-    RequestValidationError,
-    validation_exception_handler,
-)
-
-app.add_exception_handler(
-    SQLAlchemyError,
-    database_exception_handler,
-)
-
-app.add_exception_handler(
-    Exception,
-    general_exception_handler,
-)
-app.add_exception_handler(
-    BaseCustomException,
-    custom_exception_handler,
-)
+register_exception_handlers(app)
 
 
 app.include_router(employee_router)

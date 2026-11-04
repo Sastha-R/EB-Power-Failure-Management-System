@@ -9,6 +9,7 @@ from app.database.database import get_db
 from app.models.employee import Employee
 from app.schemas.employee_schema import EmployeeCreate, EmployeeResponse
 from app.services.implementations.employee_service import EmployeeService
+from fastapi import Query
 
 employee_router = APIRouter(prefix="/employees", tags=["Employees"])
 
@@ -25,13 +26,19 @@ async def create_employee(
     return await employee_service.create_employee(db, employee_data)
 
 
-@employee_router.get("/", response_model=list[EmployeeResponse])
+@employee_router.get("/")
 async def get_all_employees(
-    db: Annotated[AsyncSession, Depends(get_db)],
-    current_admin: Annotated[Employee, Depends(required_admin)],
-    employee_service: Annotated[EmployeeService, Depends(get_employee_service)],
+    limit: int = Query(default=10, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    db: AsyncSession = Depends(get_db),
+    employee_service: EmployeeService = Depends(get_employee_service),
+    current_admin: Employee = Depends(required_admin),
 ):
-    return await employee_service.get_all_employees(db)
+    return await employee_service.get_all_employees(
+        db,
+        limit,
+        offset,
+    )
 
 
 @employee_router.get("/{employee_id}", response_model=EmployeeResponse)
@@ -52,3 +59,5 @@ async def deactivate_employee(
     employee_service=Depends(get_employee_service),
 ):
     return await employee_service.deactivate_employee(db, employee_id)
+
+
