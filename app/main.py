@@ -20,11 +20,37 @@ from app.exceptions.exception_handlers import (
 from app.middleware.request_logging_middleware import (
     RequestLoggingMiddleware,
 )
+from contextlib import asynccontextmanager
+import logging
+from app.database.database import engine
+from app.utils.startup import check_admin_exists
+
+
 
 setup_logging()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger = logging.getLogger(__name__)
+
+    logger.info("Application starting")
+
+    await check_admin_exists()
+
+    yield
+
+    await engine.dispose()
+
+    logger.info("Application shutdown completed")
 
 
-app = FastAPI(title="EB Power Failure Management System")
+
+
+
+
+app = FastAPI(
+    title="EB Power Failure Management System",
+    lifespan=lifespan
+    )
 
 app.add_middleware(RequestLoggingMiddleware)
 

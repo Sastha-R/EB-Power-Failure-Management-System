@@ -1,20 +1,19 @@
+import logging
 import uuid
 
-from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import hash_password
-from app.repositories.implementations.employee_repository import EmployeeRepository
-from app.services.interfaces.employee_service_interface import EmployeeServiceInterface
-import logging
 from app.exceptions.custom_exceptions.employee_exceptions import (
-    EmployeeNotFoundError,
     EmployeeAlreadyExistsError,
     EmployeeAlreadyInactiveError,
+    EmployeeNotFoundError,
 )
-
+from app.repositories.implementations.employee_repository import EmployeeRepository
+from app.services.interfaces.employee_service_interface import EmployeeServiceInterface
 
 logger = logging.getLogger(__name__)
+
 
 class EmployeeService(EmployeeServiceInterface):
     def __init__(self, employee_repository: EmployeeRepository):
@@ -27,16 +26,14 @@ class EmployeeService(EmployeeServiceInterface):
         )
 
         if existing_email:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT, detail="Email already registered"
-            )
+            raise EmployeeAlreadyExistsError("Email already registered")
 
         existing_username = await self.employee_repository.get_employee_by_username(
             db, employee_data.username
         )
 
         if existing_username:
-           raise EmployeeAlreadyExistsError(
+            raise EmployeeAlreadyExistsError(
                 "Employee with this username already exists"
             )
 
@@ -63,15 +60,12 @@ class EmployeeService(EmployeeServiceInterface):
 
         return await self.employee_repository.get_all_employees(db)
 
-
     async def deactivate_employee(
         self,
         db: AsyncSession,
         employee_id: int,
     ):
-        employee = await self.employee_repository.get_employee_by_id(
-            db, employee_id
-        )
+        employee = await self.employee_repository.get_employee_by_id(db, employee_id)
 
         if not employee:
             logger.warning(
@@ -81,16 +75,10 @@ class EmployeeService(EmployeeServiceInterface):
             raise EmployeeNotFoundError()
 
         if not employee.is_active:
-            logger.warning(
-                "Employee with ID %s is already inactive",
-                employee_id
-                
-            )
+            logger.warning("Employee with ID %s is already inactive", employee_id)
             raise EmployeeAlreadyInactiveError()
 
-        result = await self.employee_repository.deactivate_employee(
-            db, employee
-        )
+        result = await self.employee_repository.deactivate_employee(db, employee)
 
         logger.info(
             "Employee with ID %s deactivated successfully",
@@ -98,4 +86,3 @@ class EmployeeService(EmployeeServiceInterface):
         )
 
         return result
-        

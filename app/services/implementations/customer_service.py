@@ -1,16 +1,15 @@
 import uuid
 
-from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import hash_password
+from app.exceptions.custom_exceptions.customer_exceptions import (
+    CustomerAlreadyExistsError,
+    CustomerNotFoundError,
+)
 from app.repositories.implementations.customer_repository import CustomerRepository
 from app.services.interfaces.customer_service_interface import CustomerServiceInterface
-from app.exceptions.custom_exceptions.customer_exceptions import (
-    CustomerNotFoundError,
-    CustomerAlreadyExistsError,
-    CustomerAlreadyInactiveError,
-)
+
 
 class CustomerService(CustomerServiceInterface):
     def __init__(self, customer_repository: CustomerRepository):
@@ -30,7 +29,9 @@ class CustomerService(CustomerServiceInterface):
         )
 
         if existing_username:
-           raise CustomerAlreadyExistsError("Customer with this username already exists")
+            raise CustomerAlreadyExistsError(
+                "Customer with this username already exists"
+            )
 
         customer_dict = customer_data.model_dump()
 
@@ -51,5 +52,3 @@ class CustomerService(CustomerServiceInterface):
     async def get_all_customers(self, db: AsyncSession):
 
         return await self.customer_repository.get_all_customers(db)
-
-

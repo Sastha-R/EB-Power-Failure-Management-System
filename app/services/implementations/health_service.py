@@ -1,11 +1,10 @@
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException, status
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class HealthService:
-
     async def check_health(self, db: AsyncSession):
         try:
             await db.execute(text("SELECT 1"))

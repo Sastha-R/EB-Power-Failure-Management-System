@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 from fastapi import HTTPException, UploadFile, status
@@ -5,6 +6,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.concurrency import run_in_threadpool
 
 from app.core.config import settings
+from app.exceptions.custom_exceptions.complaint_exceptions import (
+    ComplaintNotEditableError,
+    ComplaintNotFoundError,
+    ComplaintNotReadyToCloseError,
+    UnauthorizedComplaintAccessError,
+)
+from app.exceptions.custom_exceptions.employee_exceptions import (
+    EmployeeAlreadyInactiveError,
+    EmployeeNotFoundError,
+)
 from app.repositories.implementations.complaint_repository import (
     ComplaintRepository,
 )
@@ -15,15 +26,9 @@ from app.services.interfaces.complaint_service_interface import (
 )
 from app.utils.email import send_complaint_closed_email, send_complaint_registered_email
 from app.utils.file_upload import upload_image
-import logging
-from app.exceptions.custom_exceptions.complaint_exceptions import (
-    ComplaintNotFoundError,
-    ComplaintAlreadyAssignedError,
-    ComplaintNotEditableError,
-    ComplaintNotReadyToCloseError,
-    UnauthorizedComplaintAccessError,
-)
+
 logger = logging.getLogger(__name__)
+
 
 class ComplaintService(ComplaintServiceInterface):
     def __init__(
@@ -53,9 +58,7 @@ class ComplaintService(ComplaintServiceInterface):
             customer.email,
             complaint.complaint_number,
         )
-        logger.info(
-            f"Complaint {complaint.complaint_number} created successfully"
-        )
+        logger.info(f"Complaint {complaint.complaint_number} created successfully")
         return complaint
 
     async def get_customer_complaints(self, db: AsyncSession, customer_id: int):
@@ -86,15 +89,10 @@ class ComplaintService(ComplaintServiceInterface):
         )
 
         if not lineman or lineman.role != "lineman":
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Lineman not found"
-            )
+            raise EmployeeNotFoundError("Lineman not found")
 
         if not lineman.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Lineman account is inactive",
-            )
+            raise EmployeeAlreadyInactiveError("Lineman account is inactive")
 
         # Prepare assignment data
         assignment_dict = assignment_data.model_dump()
@@ -119,12 +117,11 @@ class ComplaintService(ComplaintServiceInterface):
         )
 
         if not complaint:
-            raise HTTPException(status_code=404, detail="Complaint not found")
+            raise ComplaintNotFoundError()
 
         if complaint.status != "REPAIR_COMPLETED":
-            raise HTTPException(
-                status_code=400,
-                detail="Complaint cannot be closed before repair completion",
+            raise ComplaintNotReadyToCloseError(
+                "Complaint cannot be closed before repair completion"
             )
 
         closed_complaint = await self.complaint_repository.close_complaint(
@@ -151,18 +148,16 @@ class ComplaintService(ComplaintServiceInterface):
         )
 
         if not complaint:
-            raise HTTPException(status_code=404, detail="Complaint not found")
+            raise ComplaintNotFoundError()
 
         if complaint.customer_id != customer_id:
-            raise HTTPException(
-                status_code=403,
-                detail="You cannot upload an image for another customer's complaint",
+            raise UnauthorizedComplaintAccessError(
+                "You cannot upload an image for another customer's complaint"
             )
 
         if complaint.status != "PENDING":
-            raise HTTPException(
-                status_code=400,
-                detail="Image can only be uploaded while the complaint is pending",
+            raise ComplaintNotEditableError(
+                "Image can only be uploaded while the complaint is pending"
             )
 
         image_path = await upload_image(
@@ -186,22 +181,15 @@ class ComplaintService(ComplaintServiceInterface):
         )
 
         if not complaint:
-            raise HTTPException(
-                status_code=404,
-                detail="Complaint not found",
-            )
+            raise ComplaintNotFoundError()
 
         if complaint.customer_id != customer_id:
-            raise HTTPException(
-                status_code=403,
-                detail="You are not allowed to update this complaint",
+            raise UnauthorizedComplaintAccessError(
+                "You are not allowed to update this complaint"
             )
 
         if complaint.status != "PENDING":
-            raise HTTPException(
-                status_code=400,
-                detail="Only pending complaints can be updated",
-            )
+            raise ComplaintNotEditableError("Only pending complaints can be updated")
 
         update_data = complaint_data.model_dump(exclude_unset=True)
 

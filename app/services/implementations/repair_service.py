@@ -1,20 +1,20 @@
-from fastapi import HTTPException, status
+from fastapi import UploadFile
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
+from app.exceptions.custom_exceptions.complaint_exceptions import ComplaintNotFoundError
+from app.exceptions.custom_exceptions.repair_exceptions import (
+    RepairAlreadyCompletedError,
+    RepairNotAllowedError,
+    RepairNotAssignedError,
+    RepairNotFoundError,
+)
 from app.repositories.implementations.complaint_repository import ComplaintRepository
 from app.repositories.implementations.repair_repository import RepairRepository
 from app.services.interfaces.repair_service_interface import RepairServiceInterface
-
-from fastapi import UploadFile
 from app.utils.file_upload import upload_image
-from app.core.config import settings
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.exceptions.custom_exceptions.repair_exceptions import (
-    RepairNotFoundError,
-    RepairAlreadyExistsError,
-    RepairNotAssignedError,
-    RepairNotAllowedError,
-    RepairAlreadyCompletedError,
-)
+
+
 class RepairService(RepairServiceInterface):
     def __init__(
         self,
@@ -33,9 +33,7 @@ class RepairService(RepairServiceInterface):
         )
 
         if not complaint:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Complaint not found"
-            )
+            raise ComplaintNotFoundError()
 
         # Check whether complaint is assigned to this lineman
         assignment = await self.repair_repository.get_assignment(
@@ -44,12 +42,11 @@ class RepairService(RepairServiceInterface):
 
         if not assignment:
             raise RepairNotAssignedError()
-        
+
         # Check complaint status
         if complaint.status != "ASSIGNED":
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Complaint is not available for repair completion",
+            raise RepairNotAllowedError(
+                "Complaint is not available for repair completion"
             )
 
         # Prevent duplicate repair submission
@@ -81,7 +78,6 @@ class RepairService(RepairServiceInterface):
             await db.rollback()
             raise
 
-
     async def upload_repair_image(
         self, db, complaint_id: int, lineman_id: int, image: UploadFile
     ):
@@ -90,22 +86,18 @@ class RepairService(RepairServiceInterface):
         )
 
         if not complaint:
-            raise HTTPException(status_code=404, detail="Complaint not found")
+            raise ComplaintNotFoundError()
 
         assignment = await self.repair_repository.get_assignment(
             db, complaint_id, lineman_id
         )
 
         if not assignment:
-            raise HTTPException(
-                status_code=403,
-                detail="This complaint is not assigned to you",
-            )
+            raise RepairNotAssignedError()
 
         if complaint.status != "REPAIR_COMPLETED":
-            raise HTTPException(
-                status_code=400,
-                detail="Repair image can only be uploaded after repair completion",
+            raise RepairNotAllowedError(
+                "Repair image can only be uploaded after repair completion"
             )
 
         repair = await self.repair_repository.get_repair_by_complaint_id(
@@ -113,19 +105,14 @@ class RepairService(RepairServiceInterface):
         )
 
         if not repair:
-            raise HTTPException(
-                status_code=404,
-                detail="Repair details not found",
-            )
+            raise RepairNotFoundError("Repair details not found")
 
         image_path = await upload_image(
             image,
             settings.REPAIR_UPLOAD_DIR,
         )
 
-        return await self.repair_repository.update_repair_image(
-            db, repair, image_path
-        )
+        return await self.repair_repository.update_repair_image(db, repair, image_path)
 
     async def get_all_repair_details(self, db: AsyncSession):
         return await self.repair_repository.get_all_repair_details(db)
