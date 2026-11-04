@@ -7,6 +7,14 @@ from app.services.interfaces.repair_service_interface import RepairServiceInterf
 from fastapi import UploadFile
 from app.utils.file_upload import upload_image
 from app.core.config import settings
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.exceptions.custom_exceptions.repair_exceptions import (
+    RepairNotFoundError,
+    RepairAlreadyExistsError,
+    RepairNotAssignedError,
+    RepairNotAllowedError,
+    RepairAlreadyCompletedError,
+)
 class RepairService(RepairServiceInterface):
     def __init__(
         self,
@@ -35,11 +43,8 @@ class RepairService(RepairServiceInterface):
         )
 
         if not assignment:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="This complaint is not assigned to you",
-            )
-
+            raise RepairNotAssignedError()
+        
         # Check complaint status
         if complaint.status != "ASSIGNED":
             raise HTTPException(
@@ -53,10 +58,7 @@ class RepairService(RepairServiceInterface):
         )
 
         if existing_repair:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Repair details already submitted",
-            )
+            raise RepairAlreadyCompletedError()
 
         # Prepare repair data
         repair_dict = repair_data.model_dump()
@@ -124,3 +126,6 @@ class RepairService(RepairServiceInterface):
         return await self.repair_repository.update_repair_image(
             db, repair, image_path
         )
+
+    async def get_all_repair_details(self, db: AsyncSession):
+        return await self.repair_repository.get_all_repair_details(db)

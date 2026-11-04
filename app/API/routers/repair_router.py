@@ -1,18 +1,14 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, File, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.dependencies.auth_dependency import required_lineman
+from app.api.dependencies.auth_dependency import required_admin, required_lineman
 from app.api.dependencies.repair_dependency import get_repair_service
 from app.database.database import get_db
 from app.models.employee import Employee
 from app.schemas.repair_schema import RepairCreate, RepairResponse
 from app.services.implementations.repair_service import RepairService
-
-from fastapi import File, UploadFile
-from app.utils.file_upload import upload_image
-from app.core.config import settings
 
 repair_router = APIRouter(prefix="/repairs", tags=["Repairs"])
 
@@ -48,3 +44,12 @@ async def upload_repair_image(
         current_lineman.id,
         image,
     )
+
+
+@repair_router.get("/", response_model=list[RepairResponse])
+async def get_all_repair_details(
+    db: AsyncSession = Depends(get_db),
+    current_employee=Depends(required_admin),
+    repair_service=Depends(get_repair_service),
+):
+    return await repair_service.get_all_repair_details(db)

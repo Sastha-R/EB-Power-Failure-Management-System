@@ -2,26 +2,39 @@ import uuid
 
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.concurrency import run_in_threadpool
 
 from app.core.config import settings
 from app.repositories.implementations.complaint_repository import (
     ComplaintRepository,
 )
+from app.repositories.implementations.customer_repository import CustomerRepository
 from app.repositories.implementations.employee_repository import EmployeeRepository
 from app.services.interfaces.complaint_service_interface import (
     ComplaintServiceInterface,
 )
+from app.utils.email import send_complaint_closed_email, send_complaint_registered_email
 from app.utils.file_upload import upload_image
-
+import logging
+from app.exceptions.custom_exceptions.complaint_exceptions import (
+    ComplaintNotFoundError,
+    ComplaintAlreadyAssignedError,
+    ComplaintNotEditableError,
+    ComplaintNotReadyToCloseError,
+    UnauthorizedComplaintAccessError,
+)
+logger = logging.getLogger(__name__)
 
 class ComplaintService(ComplaintServiceInterface):
     def __init__(
         self,
         complaint_repository: ComplaintRepository,
         employee_repository: EmployeeRepository,
+        customer_repository: CustomerRepository,
     ):
         self.complaint_repository = complaint_repository
         self.employee_repository = employee_repository
+        self.customer_repository = customer_repository
 
     async def create_complaint(
         self, db: AsyncSession, customer_id: int, complaint_data
@@ -29,15 +42,21 @@ class ComplaintService(ComplaintServiceInterface):
         complaint_dict = complaint_data.model_dump()
 
         complaint_dict["customer_id"] = customer_id
-
         complaint_dict["complaint_number"] = f"CMP{uuid.uuid4().hex[:8].upper()}"
 
-        complaint_dict["door_no"] = complaint_dict.get("door_no")
-        complaint_dict["street"] = complaint_dict.get("street")
-        complaint_dict["district"] = complaint_dict.get("district")
-        complaint_dict["pincode"] = complaint_dict.get("pincode")
+        complaint = await self.complaint_repository.create_complaint(db, complaint_dict)
 
-        return await self.complaint_repository.create_complaint(db, complaint_dict)
+        customer = await self.customer_repository.get_customer_by_id(db, customer_id)
+
+        await run_in_threadpool(
+            send_complaint_registered_email,
+            customer.email,
+            complaint.complaint_number,
+        )
+        logger.info(
+            f"Complaint {complaint.complaint_number} created successfully"
+        )
+        return complaint
 
     async def get_customer_complaints(self, db: AsyncSession, customer_id: int):
         return await self.complaint_repository.get_customer_complaints(db, customer_id)
@@ -52,9 +71,7 @@ class ComplaintService(ComplaintServiceInterface):
         )
 
         if not complaint:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Complaint not found"
-            )
+            raise ComplaintNotFoundError()
 
         # Check complaint status
         if complaint.status != "PENDING":
@@ -85,13 +102,18 @@ class ComplaintService(ComplaintServiceInterface):
 
         # Update complaint status
         complaint.status = "ASSIGNED"
-
+        logger.info(
+            "Complaint %s assigned to lineman ID %s by admin ID %s",
+            complaint.complaint_number,
+            assignment_data.lineman_id,
+            admin_id,
+        )
         return await self.complaint_repository.assign_complaint(db, assignment_dict)
 
     async def get_assigned_complaints(self, db: AsyncSession, lineman_id: int):
         return await self.complaint_repository.get_assigned_complaints(db, lineman_id)
 
-    async def close_complaint(self, db, complaint_id: int):
+    async def close_complaint(self, db: AsyncSession, complaint_id: int):
         complaint = await self.complaint_repository.get_complaint_by_id(
             db, complaint_id
         )
@@ -105,7 +127,21 @@ class ComplaintService(ComplaintServiceInterface):
                 detail="Complaint cannot be closed before repair completion",
             )
 
-        return await self.complaint_repository.close_complaint(db, complaint)
+        closed_complaint = await self.complaint_repository.close_complaint(
+            db, complaint
+        )
+
+        customer = await self.customer_repository.get_customer_by_id(
+            db, closed_complaint.customer_id
+        )
+
+        await run_in_threadpool(
+            send_complaint_closed_email,
+            customer.email,
+            closed_complaint.complaint_number,
+        )
+
+        return closed_complaint
 
     async def upload_complaint_image(
         self, db, complaint_id: int, customer_id: int, image: UploadFile
@@ -136,4 +172,47 @@ class ComplaintService(ComplaintServiceInterface):
 
         return await self.complaint_repository.update_complaint_image(
             db, complaint, image_path
+        )
+
+    async def update_complaint(
+        self,
+        db: AsyncSession,
+        complaint_id: int,
+        customer_id: int,
+        complaint_data,
+    ):
+        complaint = await self.complaint_repository.get_complaint_by_id(
+            db, complaint_id
+        )
+
+        if not complaint:
+            raise HTTPException(
+                status_code=404,
+                detail="Complaint not found",
+            )
+
+        if complaint.customer_id != customer_id:
+            raise HTTPException(
+                status_code=403,
+                detail="You are not allowed to update this complaint",
+            )
+
+        if complaint.status != "PENDING":
+            raise HTTPException(
+                status_code=400,
+                detail="Only pending complaints can be updated",
+            )
+
+        update_data = complaint_data.model_dump(exclude_unset=True)
+
+        if not update_data:
+            raise HTTPException(
+                status_code=400,
+                detail="No fields provided for update",
+            )
+
+        return await self.complaint_repository.update_complaint(
+            db,
+            complaint,
+            update_data,
         )

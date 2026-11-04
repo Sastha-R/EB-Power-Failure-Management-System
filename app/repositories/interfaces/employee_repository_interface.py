@@ -23,3 +23,11 @@ class EmployeeRepositoryInterface(ABC):
     @abstractmethod
     async def get_all_employees(self, db: AsyncSession):
         pass
+
+    @abstractmethod
+    async def deactivate_employee(
+        self,
+        db: AsyncSession,
+        employee,
+    ):
+        pass

@@ -17,6 +17,12 @@ class Settings(BaseSettings):
     REPAIR_UPLOAD_DIR: str
     MAX_FILE_SIZE: int
 
+    SMTP_HOST: str
+    SMTP_PORT: int
+    SMTP_USERNAME: str
+    SMTP_PASSWORD: str
+    SMTP_FROM_EMAIL: str
+
     model_config = SettingsConfigDict(env_file=".env")
 
 

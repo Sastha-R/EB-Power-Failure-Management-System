@@ -29,7 +29,7 @@ async def create_employee(
 async def get_all_employees(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_admin: Annotated[Employee, Depends(required_admin)],
-    employee_service: Annotated[EmployeeService, Depends(get_employee_service)]
+    employee_service: Annotated[EmployeeService, Depends(get_employee_service)],
 ):
     return await employee_service.get_all_employees(db)
 
@@ -42,3 +42,13 @@ async def get_employee_by_id(
     current_admin: Annotated[Employee, Depends(required_admin)],
 ):
     return await employee_service.get_employee_by_id(db, employee_id)
+
+
+@employee_router.delete("/{employee_id}")
+async def deactivate_employee(
+    employee_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_employee=Depends(required_admin),
+    employee_service=Depends(get_employee_service),
+):
+    return await employee_service.deactivate_employee(db, employee_id)

@@ -6,7 +6,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.security import hash_password
 from app.repositories.implementations.customer_repository import CustomerRepository
 from app.services.interfaces.customer_service_interface import CustomerServiceInterface
-
+from app.exceptions.custom_exceptions.customer_exceptions import (
+    CustomerNotFoundError,
+    CustomerAlreadyExistsError,
+    CustomerAlreadyInactiveError,
+)
 
 class CustomerService(CustomerServiceInterface):
     def __init__(self, customer_repository: CustomerRepository):
@@ -19,18 +23,14 @@ class CustomerService(CustomerServiceInterface):
         )
 
         if existing_email:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT, detail="Email already registered"
-            )
+            raise CustomerAlreadyExistsError("Customer with this email already exists")
 
         existing_username = await self.customer_repository.get_customer_by_username(
             db, customer_data.username
         )
 
         if existing_username:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT, detail="Username already exists"
-            )
+           raise CustomerAlreadyExistsError("Customer with this username already exists")
 
         customer_dict = customer_data.model_dump()
 
@@ -44,12 +44,12 @@ class CustomerService(CustomerServiceInterface):
         customer = await self.customer_repository.get_customer_by_id(db, customer_id)
 
         if not customer:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found"
-            )
+            raise CustomerNotFoundError()
 
         return customer
 
     async def get_all_customers(self, db: AsyncSession):
 
         return await self.customer_repository.get_all_customers(db)
+
+

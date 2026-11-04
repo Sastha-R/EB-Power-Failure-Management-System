@@ -38,3 +38,16 @@ class EmployeeRepository(EmployeeRepositoryInterface):
         result = await db.execute(select(Employee).order_by(Employee.id))
 
         return result.scalars().all()
+
+
+    async def deactivate_employee(
+        self,
+        db: AsyncSession,
+        employee,
+    ):
+        employee.is_active = False
+
+        await db.commit()
+        await db.refresh(employee)
+
+        return employee

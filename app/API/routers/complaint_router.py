@@ -13,7 +13,11 @@ from app.database.database import get_db
 from app.models.customer import Customer
 from app.models.employee import Employee
 from app.schemas.assignment_schema import AssignmentCreate
-from app.schemas.complaint_schema import ComplaintCreate
+from app.schemas.complaint_schema import (
+    ComplaintCreate,
+    ComplaintResponse,
+    ComplaintUpdate,
+)
 from app.services.implementations.complaint_service import ComplaintService
 
 complaint_router = APIRouter(prefix="/complaints", tags=["Complaints"])
@@ -93,4 +97,23 @@ async def upload_complaint_image(
         complaint_id,
         current_customer.id,
         image,
+    )
+
+
+@complaint_router.patch(
+    "/{complaint_id}",
+    response_model=ComplaintResponse,
+)
+async def update_complaint(
+    complaint_id: int,
+    complaint_data: ComplaintUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_customer=Depends(get_current_customer),
+    complaint_service=Depends(get_complaint_service),
+):
+    return await complaint_service.update_complaint(
+        db,
+        complaint_id,
+        current_customer.id,
+        complaint_data,
     )

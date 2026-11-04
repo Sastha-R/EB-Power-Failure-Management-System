@@ -73,3 +73,17 @@ class ComplaintRepository(ComplaintRepositoryInterface):
         await db.refresh(complaint)
 
         return complaint
+
+    async def update_complaint(
+        self,
+        db: AsyncSession,
+        complaint,
+        complaint_data: dict,
+    ):
+        for key, value in complaint_data.items():
+            setattr(complaint, key, value)
+
+        await db.commit()
+        await db.refresh(complaint)
+
+        return complaint

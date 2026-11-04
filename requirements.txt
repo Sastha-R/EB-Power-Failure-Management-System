@@ -19,3 +19,4 @@ pytest-asyncio
 httpx
 pytest-cov
 ruff 
+jinja2

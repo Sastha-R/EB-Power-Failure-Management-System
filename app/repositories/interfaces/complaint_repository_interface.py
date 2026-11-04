@@ -60,3 +60,12 @@ class ComplaintRepositoryInterface(ABC):
     @abstractmethod
     async def update_complaint_image(self, db, complaint, image_path: str):
         pass
+
+    @abstractmethod
+    async def update_complaint(
+        self,
+        db: AsyncSession,
+        complaint,
+        complaint_data: dict,
+    ):
+        pass
