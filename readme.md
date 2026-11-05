@@ -475,11 +475,16 @@ pytest tests/integration/ -v
 
 ### 7. Code Linting and Formatting (Ruff)
 
-# Check for linting issues
+## Check for linting issues
+```powershell
 ruff check .
+```
 
-# Automatically fix fixable linting issues
+## Automatically fix fixable linting issues
+```powershell
 ruff check . --fix
-
-# Format Python code
+```
+## Format Python code
+```powershell
 ruff format .
+```
