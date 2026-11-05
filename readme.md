@@ -35,7 +35,7 @@ PENDING -> ASSIGNED -> REPAIR_COMPLETED -> CLOSED
 | Password security | `pwdlib[argon2]` | Password hashing and verification through `PasswordHash.recommended()` |
 | Uploads | FastAPI `UploadFile`, `python-multipart`, `aiofiles` | Multipart upload handling and asynchronous file writes |
 | Email | Python `smtplib`, `email.message.EmailMessage`, Jinja2 | SMTP delivery and rendered HTML templates |
-| Testing | pytest, pytest-asyncio, httpx, pytest-cov, `unittest.mock` | Unit, repository integration, and API tests |
+| Testing | pytest, pytest-asyncio, httpx, pytest-cov, mocking | Unit, repository integration, and API tests |
 
 `psycopg` and `python-dotenv` are also listed in `requirements.txt`; application database URLs in the current code use `postgresql+asyncpg`. Dependencies are not version-pinned in that file.
 
@@ -43,8 +43,8 @@ PENDING -> ASSIGNED -> REPAIR_COMPLETED -> CLOSED
 
 ### Administrator
 
-- Created locally by `scripts/create_admin.py`; application startup checks for an active admin and logs a warning if one is absent. Startup does not create an admin automatically.
-- Creates and deactivates employee accounts. Employee creation assigns the `lineman` role; the employee model also permits `admin`.
+- Created locally by `scripts/create_admin.py`; application startup checks for an active admin and logs a warning if one is absent.
+- Creates and deactivates employee accounts. Employee creation assigns the `lineman` role `admin`.
 - Lists, views, and deactivates customers. Customer registration itself is public.
 - Views all complaints, assigns pending complaints to active linemen, and closes complaints after repair completion.
 - Views all repair details and the complaint statistics report.
@@ -68,19 +68,6 @@ Public endpoints are customer registration, login, refresh-token exchange, and h
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    Client[HTTP client] --> Router[FastAPI router]
-    Router --> Dependency[Dependency provider and auth]
-    Dependency --> Service[Service implementation]
-    Service -. implements .-> ServiceInterface[Service interface]
-    Service --> Repository[Repository implementation]
-    Repository -. implements .-> RepositoryInterface[Repository interface]
-    Repository --> Session[AsyncSession]
-    Session --> DB[(PostgreSQL)]
-    Router --> Schema[Pydantic request and response schemas]
-    Service --> Utility[Security, email, and upload utilities]
-```
 
 - **Routers** declare HTTP methods, URL paths, request parameters, schemas, and dependencies.
 - **Service interfaces** use abstract base classes to declare service contracts. Service implementations contain application rules such as duplicate checks, status checks, and password hashing.
