@@ -12,23 +12,29 @@ from app.core.security import create_access_token
 from app.database.base import Base
 from app.database.database import DATABASE_URL, get_db
 from app.main import app
-
+from app.core.config import settings
 
 def _test_database_url():
-    url = os.getenv("TEST_DATABASE_URL")
+    url = settings.TEST_DATABASE_URL
+
     if not url:
-        pytest.fail("Set TEST_DATABASE_URL to run PostgreSQL integration tests")
+        pytest.fail("Set TEST_DATABASE_URL in your .env file")
+
     if not url.startswith(("postgresql+asyncpg://", "postgresql://")):
         pytest.fail("TEST_DATABASE_URL must use PostgreSQL")
 
     def identity(value):
-        parsed = urlsplit(value.replace("postgresql://", "postgresql+asyncpg://", 1))
+        parsed = urlsplit(
+            value.replace("postgresql://", "postgresql+asyncpg://", 1)
+        )
         return parsed.hostname, parsed.port or 5432, parsed.path.lstrip("/")
 
     if identity(url) == identity(DATABASE_URL):
-        pytest.fail("TEST_DATABASE_URL points at the configured application database")
-    return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        pytest.fail(
+            "TEST_DATABASE_URL points at the configured application database"
+        )
 
+    return url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
 @pytest.fixture
 def test_database_url():

@@ -23,6 +23,8 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str
     SMTP_FROM_EMAIL: str
 
+    TEST_DATABASE_URL: str | None = None
+    
     model_config = SettingsConfigDict(env_file=".env")
 
 
