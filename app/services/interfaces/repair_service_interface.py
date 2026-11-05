@@ -20,12 +20,14 @@ class RepairServiceInterface(ABC):
     async def get_all_repair_details(self, db: AsyncSession):
         pass
 
-    @abstractmethod
-    async def update_complaint(
-        self,
-        db: AsyncSession,
-        complaint_id: int,
-        customer_id: int,
-        complaint_data,
-    ):
-        pass
+    # @abstractmethod
+    # async def update_complaint(
+    #     self,
+    #     db: AsyncSession,
+    #     complaint_id: int,
+    #     customer_id: int,
+    #     complaint_data,
+    # ):
+    #     pass
+
+    
