@@ -472,3 +472,14 @@ Ensure `.env` contains a valid `TEST_DATABASE_URL` for the isolated test databas
 ```powershell
 pytest tests/integration/ -v
 ```
+
+### 7. Code Linting and Formatting (Ruff)
+
+# Check for linting issues
+ruff check .
+
+# Automatically fix fixable linting issues
+ruff check . --fix
+
+# Format Python code
+ruff format .

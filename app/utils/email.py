@@ -9,9 +9,7 @@ from app.core.config import settings
 
 BASE_DIR: Path = Path(__file__).resolve().parent.parent
 
-template_env: Environment = Environment(
-    loader=FileSystemLoader(BASE_DIR / "templates")
-)
+template_env: Environment = Environment(loader=FileSystemLoader(BASE_DIR / "templates"))
 
 logger: logging.Logger = logging.getLogger(__name__)
 

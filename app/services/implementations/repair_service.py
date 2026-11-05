@@ -9,9 +9,9 @@ from app.exceptions.custom_exceptions.repair_exceptions import (
     RepairNotAssignedError,
     RepairNotFoundError,
 )
-from app.models.repair_detail import RepairDetail
 from app.models.complaint import Complaint
 from app.models.complaint_assignment import ComplaintAssignment
+from app.models.repair_detail import RepairDetail
 from app.repositories.implementations.complaint_repository import ComplaintRepository
 from app.repositories.implementations.repair_repository import RepairRepository
 from app.schemas.repair_schema import RepairCreate
@@ -36,17 +36,17 @@ class RepairService(RepairServiceInterface):
         repair_data: RepairCreate,
     ) -> RepairDetail:
         # Check whether complaint exists
-        complaint: Complaint | None = await self.complaint_repository.get_complaint_by_id(
-            db, complaint_id
-        )
+        complaint: (
+            Complaint | None
+        ) = await self.complaint_repository.get_complaint_by_id(db, complaint_id)
 
         if not complaint:
             raise ComplaintNotFoundError()
 
         # Check whether complaint is assigned to this lineman
-        assignment: ComplaintAssignment | None = await self.repair_repository.get_assignment(
-            db, complaint_id, lineman_id
-        )
+        assignment: (
+            ComplaintAssignment | None
+        ) = await self.repair_repository.get_assignment(db, complaint_id, lineman_id)
 
         if not assignment:
             raise RepairNotAssignedError()
@@ -58,9 +58,9 @@ class RepairService(RepairServiceInterface):
             )
 
         # Prevent duplicate repair submission
-        existing_repair: RepairDetail | None = await self.repair_repository.get_repair_by_complaint_id(
-            db, complaint_id
-        )
+        existing_repair: (
+            RepairDetail | None
+        ) = await self.repair_repository.get_repair_by_complaint_id(db, complaint_id)
 
         if existing_repair:
             raise RepairAlreadyCompletedError()
@@ -95,16 +95,16 @@ class RepairService(RepairServiceInterface):
         lineman_id: int,
         image: UploadFile,
     ) -> RepairDetail:
-        complaint: Complaint | None = await self.complaint_repository.get_complaint_by_id(
-            db, complaint_id
-        )
+        complaint: (
+            Complaint | None
+        ) = await self.complaint_repository.get_complaint_by_id(db, complaint_id)
 
         if not complaint:
             raise ComplaintNotFoundError()
 
-        assignment: ComplaintAssignment | None = await self.repair_repository.get_assignment(
-            db, complaint_id, lineman_id
-        )
+        assignment: (
+            ComplaintAssignment | None
+        ) = await self.repair_repository.get_assignment(db, complaint_id, lineman_id)
 
         if not assignment:
             raise RepairNotAssignedError()
@@ -114,9 +114,9 @@ class RepairService(RepairServiceInterface):
                 "Repair image can only be uploaded after repair completion"
             )
 
-        repair: RepairDetail | None = await self.repair_repository.get_repair_by_complaint_id(
-            db, complaint_id
-        )
+        repair: (
+            RepairDetail | None
+        ) = await self.repair_repository.get_repair_by_complaint_id(db, complaint_id)
 
         if not repair:
             raise RepairNotFoundError("Repair details not found")

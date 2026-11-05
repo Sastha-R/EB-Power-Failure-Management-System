@@ -1,5 +1,4 @@
 from sqlalchemy import select
-from sqlalchemy.engine import Result
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.complaint import Complaint
@@ -52,9 +51,7 @@ class ComplaintRepository(ComplaintRepositoryInterface):
     async def get_complaint_by_id(
         self, db: AsyncSession, complaint_id: int
     ) -> Complaint | None:
-        result = await db.execute(
-            select(Complaint).where(Complaint.id == complaint_id)
-        )
+        result = await db.execute(select(Complaint).where(Complaint.id == complaint_id))
 
         return result.scalar_one_or_none()
 

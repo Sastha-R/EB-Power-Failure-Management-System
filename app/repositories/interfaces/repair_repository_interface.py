@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.complaint_assignment import ComplaintAssignment
@@ -6,7 +7,6 @@ from app.models.repair_detail import RepairDetail
 
 
 class RepairRepositoryInterface(ABC):
-
     @abstractmethod
     async def get_assignment(
         self, db: AsyncSession, complaint_id: int, lineman_id: int

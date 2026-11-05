@@ -1,48 +1,15 @@
-from fastapi import Request, HTTPException
-from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
-from sqlalchemy.exc import SQLAlchemyError
 import logging
 
-from fastapi import Request
+from fastapi import HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from starlette import status
-
-from app.exceptions.custom_exceptions.employee_exceptions import (
-    EmployeeNotFoundError,
-    EmployeeAlreadyExistsError,
-    EmployeeAlreadyInactiveError,
-    InvalidEmployeeRoleError,
-)
-from app.exceptions.custom_exceptions.customer_exceptions import (
-    CustomerNotFoundError,
-    CustomerAlreadyExistsError,
-    CustomerAlreadyInactiveError,
-)
-from app.exceptions.custom_exceptions.complaint_exceptions import (
-    ComplaintNotFoundError,
-    ComplaintAlreadyExistsError,
-    ComplaintAlreadyAssignedError,
-    ComplaintNotEditableError,
-    ComplaintNotReadyToCloseError,
-    UnauthorizedComplaintAccessError,
-)
-from app.exceptions.custom_exceptions.repair_exceptions import (
-    RepairNotFoundError,
-    RepairAlreadyExistsError,
-    RepairNotAssignedError,
-    RepairNotAllowedError,
-    RepairAlreadyCompletedError,
-)
-from app.exceptions.custom_exceptions.assignment_exceptions import (
-    AssignmentNotFoundError,
-    AssignmentAlreadyExistsError,
-    InvalidLinemanAssignmentError,
-)
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.exceptions.custom_exceptions.base_exception import BaseCustomException
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+
 async def http_exception_handler(
     request: Request,
     exc: HTTPException,
@@ -61,6 +28,7 @@ async def http_exception_handler(
         },
     )
 
+
 async def validation_exception_handler(
     request: Request,
     exc: RequestValidationError,
@@ -70,7 +38,7 @@ async def validation_exception_handler(
         request.url.path,
         exc.errors(),
     )
-     
+
     return JSONResponse(
         status_code=422,
         content={
@@ -79,6 +47,7 @@ async def validation_exception_handler(
             "errors": exc.errors(),
         },
     )
+
 
 async def database_exception_handler(
     request: Request,
@@ -94,6 +63,7 @@ async def database_exception_handler(
         },
     )
 
+
 async def general_exception_handler(
     request: Request,
     exc: Exception,
@@ -107,6 +77,7 @@ async def general_exception_handler(
             "message": "Internal server error",
         },
     )
+
 
 async def custom_exception_handler(
     request: Request,

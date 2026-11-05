@@ -3,6 +3,7 @@ import uuid
 
 import aiofiles
 from fastapi import HTTPException, UploadFile, status
+
 from app.core.config import settings
 
 UPLOAD_DIR: str = settings.COMPLAINT_UPLOAD_DIR

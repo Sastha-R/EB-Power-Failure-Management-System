@@ -1,5 +1,4 @@
 from sqlalchemy import select
-from sqlalchemy.engine import Result
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Employee
@@ -25,44 +24,33 @@ class EmployeeRepository(EmployeeRepositoryInterface):
     async def get_employee_by_id(
         self, db: AsyncSession, employee_id: int
     ) -> Employee | None:
-        result = await db.execute(
-            select(Employee).where(Employee.id == employee_id)
-        )
+        result = await db.execute(select(Employee).where(Employee.id == employee_id))
 
         return result.scalar_one_or_none()
 
     async def get_employee_by_email(
         self, db: AsyncSession, email: str
     ) -> Employee | None:
-        result = await db.execute(
-            select(Employee).where(Employee.email == email)
-        )
+        result = await db.execute(select(Employee).where(Employee.email == email))
 
         return result.scalar_one_or_none()
 
     async def get_employee_by_username(
         self, db: AsyncSession, username: str
     ) -> Employee | None:
-        result = await db.execute(
-            select(Employee).where(Employee.username == username)
-        )
+        result = await db.execute(select(Employee).where(Employee.username == username))
 
         return result.scalar_one_or_none()
 
     async def get_all_employees(
-            self,
-            db: AsyncSession,
-            limit: int,
-            offset: int,
+        self,
+        db: AsyncSession,
+        limit: int,
+        offset: int,
     ) -> list[Employee]:
-            result = await db.execute(
-                select(Employee)
-                .limit(limit)
-                .offset(offset)
-            )
+        result = await db.execute(select(Employee).limit(limit).offset(offset))
 
-            return result.scalars().all()
-
+        return result.scalars().all()
 
     async def deactivate_employee(
         self,

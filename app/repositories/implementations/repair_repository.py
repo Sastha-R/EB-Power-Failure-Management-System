@@ -1,5 +1,4 @@
 from sqlalchemy import select
-from sqlalchemy.engine import Result
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.complaint_assignment import ComplaintAssignment
@@ -52,8 +51,6 @@ class RepairRepository(RepairRepositoryInterface):
         return repair
 
     async def get_all_repair_details(self, db: AsyncSession) -> list[RepairDetail]:
-        result = await db.execute(
-            select(RepairDetail)
-        )
+        result = await db.execute(select(RepairDetail))
 
         return result.scalars().all()

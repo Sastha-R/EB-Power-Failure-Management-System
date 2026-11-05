@@ -25,11 +25,11 @@ from app.repositories.implementations.complaint_repository import (
 )
 from app.repositories.implementations.customer_repository import CustomerRepository
 from app.repositories.implementations.employee_repository import EmployeeRepository
+from app.schemas.assignment_schema import AssignmentCreate
+from app.schemas.complaint_schema import ComplaintCreate, ComplaintUpdate
 from app.services.interfaces.complaint_service_interface import (
     ComplaintServiceInterface,
 )
-from app.schemas.assignment_schema import AssignmentCreate
-from app.schemas.complaint_schema import ComplaintCreate, ComplaintUpdate
 from app.utils.email import send_complaint_closed_email, send_complaint_registered_email
 from app.utils.file_upload import upload_image
 
@@ -59,9 +59,7 @@ class ComplaintService(ComplaintServiceInterface):
             db, complaint_dict
         )
 
-        customer = await self.customer_repository.get_customer_by_id(
-            db, customer_id
-        )
+        customer = await self.customer_repository.get_customer_by_id(db, customer_id)
 
         await run_in_threadpool(
             send_complaint_registered_email,
@@ -82,7 +80,9 @@ class ComplaintService(ComplaintServiceInterface):
     async def assign_complaint(
         self, db: AsyncSession, admin_id: int, assignment_data: AssignmentCreate
     ) -> ComplaintAssignment:
-        complaint: Complaint | None = await self.complaint_repository.get_complaint_by_id(
+        complaint: (
+            Complaint | None
+        ) = await self.complaint_repository.get_complaint_by_id(
             db, assignment_data.complaint_id
         )
 
@@ -123,12 +123,10 @@ class ComplaintService(ComplaintServiceInterface):
     ) -> list[Complaint]:
         return await self.complaint_repository.get_assigned_complaints(db, lineman_id)
 
-    async def close_complaint(
-        self, db: AsyncSession, complaint_id: int
-    ) -> Complaint:
-        complaint: Complaint | None = await self.complaint_repository.get_complaint_by_id(
-            db, complaint_id
-        )
+    async def close_complaint(self, db: AsyncSession, complaint_id: int) -> Complaint:
+        complaint: (
+            Complaint | None
+        ) = await self.complaint_repository.get_complaint_by_id(db, complaint_id)
 
         if not complaint:
             raise ComplaintNotFoundError()
@@ -161,9 +159,9 @@ class ComplaintService(ComplaintServiceInterface):
         customer_id: int,
         image: UploadFile,
     ) -> Complaint:
-        complaint: Complaint | None = await self.complaint_repository.get_complaint_by_id(
-            db, complaint_id
-        )
+        complaint: (
+            Complaint | None
+        ) = await self.complaint_repository.get_complaint_by_id(db, complaint_id)
 
         if not complaint:
             raise ComplaintNotFoundError()
@@ -194,9 +192,9 @@ class ComplaintService(ComplaintServiceInterface):
         customer_id: int,
         complaint_data: ComplaintUpdate,
     ) -> Complaint:
-        complaint: Complaint | None = await self.complaint_repository.get_complaint_by_id(
-            db, complaint_id
-        )
+        complaint: (
+            Complaint | None
+        ) = await self.complaint_repository.get_complaint_by_id(db, complaint_id)
 
         if not complaint:
             raise ComplaintNotFoundError()

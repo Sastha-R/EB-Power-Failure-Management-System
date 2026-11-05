@@ -4,10 +4,9 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.engine import Result
 
+from app.core.security import hash_password
 from app.database.database import SessionLocal
 from app.models import Employee
-from app.core.security import hash_password
-
 
 # Admin details
 ADMIN_USERNAME: str = "admin"
@@ -23,11 +22,9 @@ ADMIN_PINCODE: str = "641001"
 
 async def create_admin() -> None:
     async with SessionLocal() as db:
-
         result: Result[tuple[Employee]] = await db.execute(
             select(Employee).where(
-                (Employee.email == ADMIN_EMAIL) |
-                (Employee.username == ADMIN_USERNAME)
+                (Employee.email == ADMIN_EMAIL) | (Employee.username == ADMIN_USERNAME)
             )
         )
 
@@ -46,16 +43,14 @@ async def create_admin() -> None:
             street=ADMIN_STREET,
             district=ADMIN_DISTRICT,
             pincode=ADMIN_PINCODE,
-            is_active=True
+            is_active=True,
         )
 
         db.add(admin)
         await db.commit()
-        
 
         print("Admin created successfully.")
 
 
 if __name__ == "__main__":
     asyncio.run(create_admin())
-

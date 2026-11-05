@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import UploadFile
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.repair_detail import RepairDetail
 from app.schemas.repair_schema import RepairCreate
@@ -41,5 +41,3 @@ class RepairServiceInterface(ABC):
     #     complaint_data,
     # ):
     #     pass
-
-    

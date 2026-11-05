@@ -19,9 +19,7 @@ complaint_report_router: APIRouter = APIRouter(
 )
 
 
-@complaint_report_router.get(
-    "/statistics", response_model=ComplaintStatisticsResponse
-)
+@complaint_report_router.get("/statistics", response_model=ComplaintStatisticsResponse)
 async def get_complaint_statistics(
     db: Annotated[AsyncSession, Depends(get_db)],
     report_service: Annotated[

@@ -1,5 +1,4 @@
 from sqlalchemy import select
-from sqlalchemy.engine import Result
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Customer
@@ -25,9 +24,7 @@ class CustomerRepository(CustomerRepositoryInterface):
         self, db: AsyncSession, customer_id: int
     ) -> Customer | None:
 
-        result = await db.execute(
-            select(Customer).where(Customer.id == customer_id)
-        )
+        result = await db.execute(select(Customer).where(Customer.id == customer_id))
 
         return result.scalar_one_or_none()
 
@@ -35,9 +32,7 @@ class CustomerRepository(CustomerRepositoryInterface):
         self, db: AsyncSession, email: str
     ) -> Customer | None:
 
-        result = await db.execute(
-            select(Customer).where(Customer.email == email)
-        )
+        result = await db.execute(select(Customer).where(Customer.email == email))
 
         return result.scalar_one_or_none()
 
@@ -45,9 +40,7 @@ class CustomerRepository(CustomerRepositoryInterface):
         self, db: AsyncSession, username: str
     ) -> Customer | None:
 
-        result = await db.execute(
-            select(Customer).where(Customer.username == username)
-        )
+        result = await db.execute(select(Customer).where(Customer.username == username))
 
         return result.scalar_one_or_none()
 
@@ -57,11 +50,7 @@ class CustomerRepository(CustomerRepositoryInterface):
         limit: int,
         offset: int,
     ) -> list[Customer]:
-        result = await db.execute(
-            select(Customer)
-            .limit(limit)
-            .offset(offset)
-        )
+        result = await db.execute(select(Customer).limit(limit).offset(offset))
 
         return result.scalars().all()
 

@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.customer import Customer
 
 
@@ -31,12 +32,12 @@ class CustomerRepositoryInterface(ABC):
 
     @abstractmethod
     async def get_all_customers(
-            self,
-            db: AsyncSession,
-            limit: int,
-            offset: int,
-        ) -> list[Customer]:
-            pass
+        self,
+        db: AsyncSession,
+        limit: int,
+        offset: int,
+    ) -> list[Customer]:
+        pass
 
     @abstractmethod
     async def deactivate_customer(

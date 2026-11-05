@@ -1,10 +1,6 @@
-from typing import Any
-
 import jwt
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.customer import Customer
-from app.models.employee import Employee
 
 from app.core.security import (
     create_access_token,
@@ -12,6 +8,8 @@ from app.core.security import (
     decode_token,
     verify_password,
 )
+from app.models.customer import Customer
+from app.models.employee import Employee
 from app.repositories.implementations.customer_repository import CustomerRepository
 from app.repositories.implementations.employee_repository import EmployeeRepository
 from app.services.interfaces.auth_service_interface import AuthServiceInterface
@@ -29,9 +27,9 @@ class AuthService(AuthServiceInterface):
     async def employee_login(
         self, db: AsyncSession, email: str, password: str
     ) -> dict[str, str]:
-        employee: Employee | None = await self.employee_repository.get_employee_by_email(
-            db, email
-        )
+        employee: (
+            Employee | None
+        ) = await self.employee_repository.get_employee_by_email(db, email)
 
         if employee:
             if not verify_password(password, employee.password):
@@ -79,8 +77,6 @@ class AuthService(AuthServiceInterface):
                 detail="Invalid or expired refresh token",
             )
 
-       
-
         if user_type == "employee":
             user = await self.employee_repository.get_employee_by_id(db, user_id)
 
@@ -117,9 +113,9 @@ class AuthService(AuthServiceInterface):
     async def customer_login(
         self, db: AsyncSession, email: str, password: str
     ) -> dict[str, str]:
-        customer: Customer | None = await self.customer_repository.get_customer_by_email(
-            db, email
-        )
+        customer: (
+            Customer | None
+        ) = await self.customer_repository.get_customer_by_email(db, email)
 
         if not customer or not verify_password(password, customer.password):
             raise HTTPException(

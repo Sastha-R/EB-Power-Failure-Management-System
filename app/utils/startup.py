@@ -1,7 +1,7 @@
 import logging
 
 from sqlalchemy import select
-from sqlalchemy.engine import Result
+
 from app.database.database import SessionLocal
 from app.models import Employee
 

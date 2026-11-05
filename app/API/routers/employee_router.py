@@ -1,7 +1,6 @@
-from typing import Any
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies.auth_dependency import required_admin
@@ -10,7 +9,6 @@ from app.database.database import get_db
 from app.models.employee import Employee
 from app.schemas.employee_schema import EmployeeCreate, EmployeeResponse
 from app.services.implementations.employee_service import EmployeeService
-from fastapi import Query
 
 employee_router: APIRouter = APIRouter(prefix="/employees", tags=["Employees"])
 
@@ -29,12 +27,12 @@ async def create_employee(
 
 @employee_router.get("/")
 async def get_all_employees(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    employee_service: Annotated[EmployeeService, Depends(get_employee_service)],
+    current_admin: Annotated[Employee, Depends(required_admin)],
     limit: int = Query(default=10, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
-    db: AsyncSession = Depends(get_db),
-    employee_service: EmployeeService = Depends(get_employee_service),
-    current_admin: Employee = Depends(required_admin),
-) :
+):
     return await employee_service.get_all_employees(
         db,
         limit,
@@ -55,10 +53,8 @@ async def get_employee_by_id(
 @employee_router.delete("/{employee_id}")
 async def deactivate_employee(
     employee_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_employee: Employee = Depends(required_admin),
-    employee_service: EmployeeService = Depends(get_employee_service),
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_employee: Annotated[Employee, Depends(required_admin)],
+    employee_service: Annotated[EmployeeService, Depends(get_employee_service)],
 ):
     return await employee_service.deactivate_employee(db, employee_id)
-
-

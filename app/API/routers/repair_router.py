@@ -1,4 +1,3 @@
-from typing import Any
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, UploadFile, status
@@ -49,8 +48,8 @@ async def upload_repair_image(
 
 @repair_router.get("/", response_model=list[RepairResponse])
 async def get_all_repair_details(
-    db: AsyncSession = Depends(get_db),
-    current_employee: Employee = Depends(required_admin),
-    repair_service: RepairService = Depends(get_repair_service),
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_employee: Annotated[Employee, Depends(required_admin)],
+    repair_service: Annotated[RepairService, Depends(get_repair_service)],
 ) -> list[RepairResponse]:
     return await repair_service.get_all_repair_details(db)

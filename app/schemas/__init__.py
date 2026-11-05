@@ -12,4 +12,22 @@ from app.schemas.complaint_schema import (
 )
 from app.schemas.customer_schema import CustomerCreate, CustomerResponse
 from app.schemas.employee_schema import EmployeeCreate, EmployeeResponse
-from app.schemas.repair_schema import RepairResponse,RepairCreate
+from app.schemas.repair_schema import RepairCreate, RepairResponse
+
+__all__: list[str] = [
+    "AssignmentCreate",
+    "AssignmentResponse",
+    "ComplaintCreate",
+    "ComplaintResponse",
+    "ComplaintUpdate",
+    "CustomerCreate",
+    "CustomerResponse",
+    "EmployeeCreate",
+    "EmployeeResponse",
+    "LoginRequest",
+    "MessageResponse",
+    "RefreshTokenRequest",
+    "RepairCreate",
+    "RepairResponse",
+    "TokenResponse",
+]

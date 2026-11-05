@@ -9,5 +9,5 @@ __all__: list[str] = [
     "ComplaintAssignment",
     "Customer",
     "Employee",
-    "RepairDetail"
-    ]
+    "RepairDetail",
+]

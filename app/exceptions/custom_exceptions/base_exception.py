@@ -1,5 +1,6 @@
 from fastapi import status
 
+
 class BaseCustomException(Exception):
     def __init__(
         self,

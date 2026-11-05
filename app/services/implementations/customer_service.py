@@ -5,16 +5,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.security import hash_password
 from app.exceptions.custom_exceptions.customer_exceptions import (
     CustomerAlreadyExistsError,
+    CustomerAlreadyInactiveError,
     CustomerNotFoundError,
 )
 from app.models.customer import Customer
 from app.repositories.implementations.customer_repository import CustomerRepository
-from app.services.interfaces.customer_service_interface import CustomerServiceInterface
 from app.schemas.customer_schema import CustomerCreate
-from app.exceptions.custom_exceptions.customer_exceptions import (
-    CustomerNotFoundError,
-    CustomerAlreadyInactiveError,
-)
+from app.services.interfaces.customer_service_interface import CustomerServiceInterface
+
 
 class CustomerService(CustomerServiceInterface):
     def __init__(self, customer_repository: CustomerRepository) -> None:
@@ -24,14 +22,18 @@ class CustomerService(CustomerServiceInterface):
         self, db: AsyncSession, customer_data: CustomerCreate
     ) -> Customer:
 
-        existing_email: Customer | None = await self.customer_repository.get_customer_by_email(
+        existing_email: (
+            Customer | None
+        ) = await self.customer_repository.get_customer_by_email(
             db, customer_data.email
         )
 
         if existing_email:
             raise CustomerAlreadyExistsError("Customer with this email already exists")
 
-        existing_username: Customer | None = await self.customer_repository.get_customer_by_username(
+        existing_username: (
+            Customer | None
+        ) = await self.customer_repository.get_customer_by_username(
             db, customer_data.username
         )
 
@@ -47,9 +49,7 @@ class CustomerService(CustomerServiceInterface):
 
         return await self.customer_repository.create_customer(db, customer_dict)
 
-    async def get_customer_by_id(
-        self, db: AsyncSession, customer_id: int
-    ) -> Customer:
+    async def get_customer_by_id(self, db: AsyncSession, customer_id: int) -> Customer:
 
         customer: Customer | None = await self.customer_repository.get_customer_by_id(
             db, customer_id
@@ -71,7 +71,6 @@ class CustomerService(CustomerServiceInterface):
             limit,
             offset,
         )
-
 
     async def deactivate_customer(
         self,

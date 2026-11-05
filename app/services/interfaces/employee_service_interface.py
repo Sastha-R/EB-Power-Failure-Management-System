@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.employee import Employee
 from app.schemas.employee_schema import EmployeeCreate
 
@@ -13,9 +14,7 @@ class EmployeeServiceInterface(ABC):
         pass
 
     @abstractmethod
-    async def get_employee_by_id(
-        self, db: AsyncSession, employee_id: int
-    ) -> Employee:
+    async def get_employee_by_id(self, db: AsyncSession, employee_id: int) -> Employee:
         pass
 
     @abstractmethod

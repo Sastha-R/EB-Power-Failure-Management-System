@@ -7,16 +7,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import decode_token
 from app.database.database import get_db
-from app.repositories.implementations.customer_repository import CustomerRepository
-from app.repositories.implementations.employee_repository import EmployeeRepository
 from app.models.customer import Customer
 from app.models.employee import Employee
+from app.repositories.implementations.customer_repository import CustomerRepository
+from app.repositories.implementations.employee_repository import EmployeeRepository
 
 oauth2_scheme: OAuth2PasswordBearer = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
 async def get_current_employee(
-    token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)
+    token: Annotated[str, Depends(oauth2_scheme)],
+    db: Annotated[AsyncSession, Depends(get_db)],
 ) -> Employee:
     try:
         payload: dict[str, Any] = decode_token(token)
@@ -32,12 +33,10 @@ async def get_current_employee(
             )
 
         employee_id: int = int(payload.get("sub"))
-        
 
     except (jwt.InvalidTokenError, ValueError, TypeError):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token"
         )
 
     repository: EmployeeRepository = EmployeeRepository()
@@ -53,7 +52,7 @@ async def get_current_employee(
 
 
 async def required_admin(
-    current_employee: Employee = Depends(get_current_employee),
+    current_employee: Annotated[Employee, Depends(get_current_employee)],
 ) -> Employee:
     if current_employee.role != "admin":
         raise HTTPException(
@@ -103,12 +102,11 @@ async def get_current_customer(
 
 
 async def required_lineman(
-    current_employee: Employee = Depends(get_current_employee),
+    current_employee: Annotated[Employee, Depends(get_current_employee)],
 ) -> Employee:
     if current_employee.role != "lineman":
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Lineman access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Lineman access required"
         )
 
     return current_employee

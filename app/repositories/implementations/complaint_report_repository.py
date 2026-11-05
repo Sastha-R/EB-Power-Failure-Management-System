@@ -1,7 +1,4 @@
 from sqlalchemy import case, func, select
-from sqlalchemy.engine import Result, Row
-from sqlalchemy.sql.elements import ColumnElement
-from sqlalchemy.sql.selectable import Select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.complaint import Complaint
@@ -24,9 +21,7 @@ class ComplaintReportRepository(ComplaintReportRepositoryInterface):
             ).label(status.lower())
             for status in statuses
         ]
-        statement = select(
-            func.count(Complaint.id).label("total_complaints"), *counts
-        )
+        statement = select(func.count(Complaint.id).label("total_complaints"), *counts)
         result = await db.execute(statement)
         row = result.one()
 

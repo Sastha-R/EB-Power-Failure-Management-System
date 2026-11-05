@@ -25,14 +25,18 @@ class EmployeeService(EmployeeServiceInterface):
         self, db: AsyncSession, employee_data: EmployeeCreate
     ) -> Employee:
 
-        existing_email: Employee | None = await self.employee_repository.get_employee_by_email(
+        existing_email: (
+            Employee | None
+        ) = await self.employee_repository.get_employee_by_email(
             db, employee_data.email
         )
 
         if existing_email:
             raise EmployeeAlreadyExistsError("Email already registered")
 
-        existing_username: Employee | None = await self.employee_repository.get_employee_by_username(
+        existing_username: (
+            Employee | None
+        ) = await self.employee_repository.get_employee_by_username(
             db, employee_data.username
         )
 
@@ -51,9 +55,7 @@ class EmployeeService(EmployeeServiceInterface):
 
         return await self.employee_repository.create_employee(db, employee_dict)
 
-    async def get_employee_by_id(
-        self, db: AsyncSession, employee_id: int
-    ) -> Employee:
+    async def get_employee_by_id(self, db: AsyncSession, employee_id: int) -> Employee:
 
         employee: Employee | None = await self.employee_repository.get_employee_by_id(
             db, employee_id
@@ -75,7 +77,7 @@ class EmployeeService(EmployeeServiceInterface):
             limit,
             offset,
         )
-    
+
     async def deactivate_employee(
         self,
         db: AsyncSession,
