@@ -9,7 +9,7 @@ from app.repositories.interfaces.complaint_report_repository_interface import (
 
 class ComplaintReportRepository(ComplaintReportRepositoryInterface):
     async def get_complaint_statistics(self, db: AsyncSession) -> dict[str, int]:
-        statuses = ("PENDING", "ASSIGNED", "REPAIR_COMPLETED", "CLOSED", "REJECTED")
+        statuses = ("PENDING", "ASSIGNED", "REPAIR_COMPLETED", "CLOSED")
         counts = [
             func.coalesce(
                 func.sum(case((Complaint.status == status, 1), else_=0)), 0
@@ -26,5 +26,4 @@ class ComplaintReportRepository(ComplaintReportRepositoryInterface):
             "assigned": int(row.assigned),
             "repair_completed": int(row.repair_completed),
             "closed": int(row.closed),
-            "rejected": int(row.rejected),
         }

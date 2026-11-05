@@ -7,4 +7,3 @@ class ComplaintStatisticsResponse(BaseModel):
     assigned: int
     repair_completed: int
     closed: int
-    rejected: int

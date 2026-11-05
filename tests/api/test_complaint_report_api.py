@@ -18,7 +18,6 @@ async def test_admin_can_get_complaint_statistics(
         "assigned": 2,
         "repair_completed": 1,
         "closed": 3,
-        "rejected": 0,
     }
 
     class Service:

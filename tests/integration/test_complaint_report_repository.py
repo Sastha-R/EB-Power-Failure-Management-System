@@ -26,7 +26,7 @@ async def test_complaint_report_repository_counts_each_status(db_session):
     )
     complaint_repository = ComplaintRepository()
     for index, status in enumerate(
-        ("PENDING", "ASSIGNED", "ASSIGNED", "REPAIR_COMPLETED", "CLOSED", "REJECTED"),
+        ("PENDING", "ASSIGNED", "ASSIGNED", "REPAIR_COMPLETED", "CLOSED"),
         start=1,
     ):
         await complaint_repository.create_complaint(
@@ -47,12 +47,11 @@ async def test_complaint_report_repository_counts_each_status(db_session):
     statistics = await ComplaintReportRepository().get_complaint_statistics(db_session)
 
     assert statistics == {
-        "total_complaints": 6,
+        "total_complaints": 5,
         "pending": 1,
         "assigned": 2,
         "repair_completed": 1,
         "closed": 1,
-        "rejected": 1,
     }
 
 
@@ -67,5 +66,4 @@ async def test_complaint_report_repository_returns_zero_for_empty_database(db_se
         "assigned": 0,
         "repair_completed": 0,
         "closed": 0,
-        "rejected": 0,
     }

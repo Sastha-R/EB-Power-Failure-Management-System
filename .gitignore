@@ -1,7 +1,5 @@
 .env
 .myvenv
 tests
-!tests/
-!tests/**
 create_admin
 logs
