@@ -42,11 +42,11 @@ from app.exceptions.custom_exceptions.assignment_exceptions import (
 
 from app.exceptions.custom_exceptions.base_exception import BaseCustomException
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 async def http_exception_handler(
     request: Request,
     exc: HTTPException,
-):
+) -> JSONResponse:
     logger.warning(
         "HTTP exception: %s | Path: %s | Status: %s",
         exc.detail,
@@ -64,7 +64,7 @@ async def http_exception_handler(
 async def validation_exception_handler(
     request: Request,
     exc: RequestValidationError,
-):
+) -> JSONResponse:
     logger.warning(
         "Request validation failed | Path: %s | Errors: %s",
         request.url.path,
@@ -83,7 +83,7 @@ async def validation_exception_handler(
 async def database_exception_handler(
     request: Request,
     exc: SQLAlchemyError,
-):
+) -> JSONResponse:
     logger.exception("Database error occurred")
 
     return JSONResponse(
@@ -97,7 +97,7 @@ async def database_exception_handler(
 async def general_exception_handler(
     request: Request,
     exc: Exception,
-):
+) -> JSONResponse:
     logger.exception("Unexpected error occurred")
 
     return JSONResponse(
@@ -111,7 +111,7 @@ async def general_exception_handler(
 async def custom_exception_handler(
     request: Request,
     exc: BaseCustomException,
-):
+) -> JSONResponse:
     return JSONResponse(
         status_code=exc.status_code,
         content={

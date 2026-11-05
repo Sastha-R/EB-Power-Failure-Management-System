@@ -1,13 +1,17 @@
 import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.employee import Employee
 from app.repositories.implementations.employee_repository import EmployeeRepository
 
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_employee_repository_create_lookup_and_deactivate(db_session):
-    repository = EmployeeRepository()
-    employee = await repository.create_employee(
+async def test_employee_repository_create_lookup_and_deactivate(
+    db_session: AsyncSession,
+) -> None:
+    repository: EmployeeRepository = EmployeeRepository()
+    employee: Employee = await repository.create_employee(
         db_session,
         {
             "employee_code": "EMPINT0001",
@@ -23,8 +27,10 @@ async def test_employee_repository_create_lookup_and_deactivate(db_session):
         },
     )
 
-    found = await repository.get_employee_by_email(db_session, employee.email)
-    deactivated = await repository.deactivate_employee(db_session, employee)
+    found: Employee | None = await repository.get_employee_by_email(
+        db_session, employee.email
+    )
+    deactivated: Employee = await repository.deactivate_employee(db_session, employee)
 
     assert found is not None
     assert found.id == employee.id

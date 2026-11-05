@@ -1,5 +1,7 @@
 import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.customer import Customer
 from app.repositories.implementations.complaint_report_repository import (
     ComplaintReportRepository,
 )
@@ -9,8 +11,10 @@ from app.repositories.implementations.customer_repository import CustomerReposit
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_complaint_report_repository_counts_each_status(db_session):
-    customer = await CustomerRepository().create_customer(
+async def test_complaint_report_repository_counts_each_status(
+    db_session: AsyncSession,
+) -> None:
+    customer: Customer = await CustomerRepository().create_customer(
         db_session,
         {
             "customer_code": "CUSREPORT001",
@@ -24,7 +28,7 @@ async def test_complaint_report_repository_counts_each_status(db_session):
             "pincode": "600001",
         },
     )
-    complaint_repository = ComplaintRepository()
+    complaint_repository: ComplaintRepository = ComplaintRepository()
     for index, status in enumerate(
         ("PENDING", "ASSIGNED", "ASSIGNED", "REPAIR_COMPLETED", "CLOSED"),
         start=1,
@@ -44,7 +48,9 @@ async def test_complaint_report_repository_counts_each_status(db_session):
             },
         )
 
-    statistics = await ComplaintReportRepository().get_complaint_statistics(db_session)
+    statistics: dict[str, int] = (
+        await ComplaintReportRepository().get_complaint_statistics(db_session)
+    )
 
     assert statistics == {
         "total_complaints": 5,
@@ -57,8 +63,12 @@ async def test_complaint_report_repository_counts_each_status(db_session):
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_complaint_report_repository_returns_zero_for_empty_database(db_session):
-    statistics = await ComplaintReportRepository().get_complaint_statistics(db_session)
+async def test_complaint_report_repository_returns_zero_for_empty_database(
+    db_session: AsyncSession,
+) -> None:
+    statistics: dict[str, int] = (
+        await ComplaintReportRepository().get_complaint_statistics(db_session)
+    )
 
     assert statistics == {
         "total_complaints": 0,

@@ -6,7 +6,7 @@ from app.api.dependencies.health_dependency import get_health_service
 from app.services.implementations.health_service import HealthService
 
 
-health_router = APIRouter(
+health_router: APIRouter = APIRouter(
     prefix="/health",
     tags=["Health Check"],
 )
@@ -16,5 +16,5 @@ health_router = APIRouter(
 async def health_check(
     db: AsyncSession = Depends(get_db),
     health_service: HealthService = Depends(get_health_service),
-):
+) -> dict[str, str]:
     return await health_service.check_health(db)

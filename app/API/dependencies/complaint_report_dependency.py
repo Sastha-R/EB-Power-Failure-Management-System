@@ -7,5 +7,5 @@ from app.services.implementations.complaint_report_service import (
 
 
 def get_complaint_report_service() -> ComplaintReportService:
-    complaint_report_repository = ComplaintReportRepository()
+    complaint_report_repository: ComplaintReportRepository = ComplaintReportRepository()
     return ComplaintReportService(complaint_report_repository)

@@ -21,6 +21,7 @@ from app.exceptions.exception_handlers import (
 from app.middleware.request_logging_middleware import (
     RequestLoggingMiddleware,
 )
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 import logging
 from app.database.database import engine
@@ -32,8 +33,8 @@ from app.exceptions.exception_registration import (
 
 setup_logging()
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    logger = logging.getLogger(__name__)
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    logger: logging.Logger = logging.getLogger(__name__)
 
     logger.info("Application starting")
 
@@ -50,7 +51,7 @@ async def lifespan(app: FastAPI):
 
 
 
-app = FastAPI(
+app: FastAPI = FastAPI(
     title="EB Power Failure Management System",
     lifespan=lifespan
     )

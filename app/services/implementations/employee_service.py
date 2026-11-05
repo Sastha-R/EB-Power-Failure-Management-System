@@ -9,26 +9,30 @@ from app.exceptions.custom_exceptions.employee_exceptions import (
     EmployeeAlreadyInactiveError,
     EmployeeNotFoundError,
 )
+from app.models.employee import Employee
 from app.repositories.implementations.employee_repository import EmployeeRepository
+from app.schemas.employee_schema import EmployeeCreate
 from app.services.interfaces.employee_service_interface import EmployeeServiceInterface
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class EmployeeService(EmployeeServiceInterface):
-    def __init__(self, employee_repository: EmployeeRepository):
+    def __init__(self, employee_repository: EmployeeRepository) -> None:
         self.employee_repository = employee_repository
 
-    async def create_employee(self, db: AsyncSession, employee_data):
+    async def create_employee(
+        self, db: AsyncSession, employee_data: EmployeeCreate
+    ) -> Employee:
 
-        existing_email = await self.employee_repository.get_employee_by_email(
+        existing_email: Employee | None = await self.employee_repository.get_employee_by_email(
             db, employee_data.email
         )
 
         if existing_email:
             raise EmployeeAlreadyExistsError("Email already registered")
 
-        existing_username = await self.employee_repository.get_employee_by_username(
+        existing_username: Employee | None = await self.employee_repository.get_employee_by_username(
             db, employee_data.username
         )
 
@@ -47,9 +51,13 @@ class EmployeeService(EmployeeServiceInterface):
 
         return await self.employee_repository.create_employee(db, employee_dict)
 
-    async def get_employee_by_id(self, db: AsyncSession, employee_id: int):
+    async def get_employee_by_id(
+        self, db: AsyncSession, employee_id: int
+    ) -> Employee:
 
-        employee = await self.employee_repository.get_employee_by_id(db, employee_id)
+        employee: Employee | None = await self.employee_repository.get_employee_by_id(
+            db, employee_id
+        )
 
         if not employee:
             raise EmployeeNotFoundError()
@@ -61,7 +69,7 @@ class EmployeeService(EmployeeServiceInterface):
         db: AsyncSession,
         limit: int,
         offset: int,
-    ):
+    ) -> list[Employee]:
         return await self.employee_repository.get_all_employees(
             db,
             limit,
@@ -72,8 +80,10 @@ class EmployeeService(EmployeeServiceInterface):
         self,
         db: AsyncSession,
         employee_id: int,
-    ):
-        employee = await self.employee_repository.get_employee_by_id(db, employee_id)
+    ) -> Employee:
+        employee: Employee | None = await self.employee_repository.get_employee_by_id(
+            db, employee_id
+        )
 
         if not employee:
             logger.warning(
@@ -86,7 +96,9 @@ class EmployeeService(EmployeeServiceInterface):
             logger.warning("Employee with ID %s is already inactive", employee_id)
             raise EmployeeAlreadyInactiveError()
 
-        result = await self.employee_repository.deactivate_employee(db, employee)
+        result: Employee = await self.employee_repository.deactivate_employee(
+            db, employee
+        )
 
         logger.info(
             "Employee with ID %s deactivated successfully",

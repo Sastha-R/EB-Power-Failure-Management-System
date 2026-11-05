@@ -4,10 +4,10 @@ from app.repositories.implementations.employee_repository import EmployeeReposit
 from app.services.implementations.complaint_service import ComplaintService
 
 
-def get_complaint_service():
-    complaint_repository = ComplaintRepository()
-    employee_repository = EmployeeRepository()
-    customer_repository = CustomerRepository()
+def get_complaint_service() -> ComplaintService:
+    complaint_repository: ComplaintRepository = ComplaintRepository()
+    employee_repository: EmployeeRepository = EmployeeRepository()
+    customer_repository: CustomerRepository = CustomerRepository()
 
     return ComplaintService(
         complaint_repository,

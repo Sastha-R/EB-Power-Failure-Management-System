@@ -1,5 +1,5 @@
 from app.services.implementations.health_service import HealthService
 
 
-def get_health_service():
+def get_health_service() -> HealthService:
     return HealthService()

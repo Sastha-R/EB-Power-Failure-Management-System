@@ -1,4 +1,7 @@
 from sqlalchemy import case, func, select
+from sqlalchemy.engine import Result, Row
+from sqlalchemy.sql.elements import ColumnElement
+from sqlalchemy.sql.selectable import Select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.complaint import Complaint
@@ -9,14 +12,21 @@ from app.repositories.interfaces.complaint_report_repository_interface import (
 
 class ComplaintReportRepository(ComplaintReportRepositoryInterface):
     async def get_complaint_statistics(self, db: AsyncSession) -> dict[str, int]:
-        statuses = ("PENDING", "ASSIGNED", "REPAIR_COMPLETED", "CLOSED")
+        statuses = (
+            "PENDING",
+            "ASSIGNED",
+            "REPAIR_COMPLETED",
+            "CLOSED",
+        )
         counts = [
             func.coalesce(
                 func.sum(case((Complaint.status == status, 1), else_=0)), 0
             ).label(status.lower())
             for status in statuses
         ]
-        statement = select(func.count(Complaint.id).label("total_complaints"), *counts)
+        statement = select(
+            func.count(Complaint.id).label("total_complaints"), *counts
+        )
         result = await db.execute(statement)
         row = result.one()
 

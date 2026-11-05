@@ -2,6 +2,7 @@ import asyncio
 import uuid
 
 from sqlalchemy import select
+from sqlalchemy.engine import Result
 
 from app.database.database import SessionLocal
 from app.models import Employee
@@ -9,21 +10,21 @@ from app.core.security import hash_password
 
 
 # Admin details
-ADMIN_USERNAME = "admin"
-ADMIN_EMAIL = "admin@gmail.com"
-ADMIN_PASSWORD = "admin@123"
+ADMIN_USERNAME: str = "admin"
+ADMIN_EMAIL: str = "admin@gmail.com"
+ADMIN_PASSWORD: str = "admin@123"
 
-ADMIN_PHONE = "9876543210"
-ADMIN_DOOR_NO = "10"
-ADMIN_STREET = "Nehru nagar"
-ADMIN_DISTRICT = "Coimbatore"
-ADMIN_PINCODE = "641001"
+ADMIN_PHONE: str = "9876543210"
+ADMIN_DOOR_NO: str = "10"
+ADMIN_STREET: str = "Nehru nagar"
+ADMIN_DISTRICT: str = "Coimbatore"
+ADMIN_PINCODE: str = "641001"
 
 
-async def create_admin():
+async def create_admin() -> None:
     async with SessionLocal() as db:
 
-        result = await db.execute(
+        result: Result[tuple[Employee]] = await db.execute(
             select(Employee).where(
                 (Employee.email == ADMIN_EMAIL) |
                 (Employee.username == ADMIN_USERNAME)
@@ -34,7 +35,7 @@ async def create_admin():
             print("Admin already exists.")
             return
 
-        admin = Employee(
+        admin: Employee = Employee(
             employee_code=f"EMP{uuid.uuid4().hex[:8].upper()}",
             username=ADMIN_USERNAME,
             email=ADMIN_EMAIL,

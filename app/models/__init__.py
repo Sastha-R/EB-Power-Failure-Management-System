@@ -4,7 +4,7 @@ from app.models.customer import Customer
 from app.models.employee import Employee
 from app.models.repair_detail import RepairDetail
 
-__all__ = [
+__all__: list[str] = [
     "Complaint",
     "ComplaintAssignment",
     "Customer",

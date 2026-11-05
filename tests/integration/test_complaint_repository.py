@@ -1,13 +1,18 @@
 import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.complaint import Complaint
+from app.models.customer import Customer
 from app.repositories.implementations.complaint_repository import ComplaintRepository
 from app.repositories.implementations.customer_repository import CustomerRepository
 
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_complaint_repository_create_list_and_update(db_session):
-    customer = await CustomerRepository().create_customer(
+async def test_complaint_repository_create_list_and_update(
+    db_session: AsyncSession,
+) -> None:
+    customer: Customer = await CustomerRepository().create_customer(
         db_session,
         {
             "customer_code": "CUSCMPINT01",
@@ -21,8 +26,8 @@ async def test_complaint_repository_create_list_and_update(db_session):
             "pincode": "600001",
         },
     )
-    repository = ComplaintRepository()
-    complaint = await repository.create_complaint(
+    repository: ComplaintRepository = ComplaintRepository()
+    complaint: Complaint = await repository.create_complaint(
         db_session,
         {
             "complaint_number": "CMPINT0001",
@@ -36,10 +41,10 @@ async def test_complaint_repository_create_list_and_update(db_session):
         },
     )
 
-    customer_complaints = await repository.get_customer_complaints(
+    customer_complaints: list[Complaint] = await repository.get_customer_complaints(
         db_session, customer.id
     )
-    updated = await repository.update_complaint(
+    updated: Complaint = await repository.update_complaint(
         db_session, complaint, {"description": "Power restored after repair"}
     )
 

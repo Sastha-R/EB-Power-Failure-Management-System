@@ -14,7 +14,7 @@ from app.exceptions.exception_handlers import (
 )
 
 
-def register_exception_handlers(app: FastAPI):
+def register_exception_handlers(app: FastAPI) -> None:
 
     app.add_exception_handler(
         HTTPException,

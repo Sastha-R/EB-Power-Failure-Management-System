@@ -3,9 +3,9 @@ from app.repositories.implementations.customer_repository import CustomerReposit
 from app.services.implementations.auth_service import AuthService
 
 
-def get_auth_service():
-    employee_repository = EmployeeRepository()
-    customer_repository = CustomerRepository()
+def get_auth_service() -> AuthService:
+    employee_repository: EmployeeRepository = EmployeeRepository()
+    customer_repository: CustomerRepository = CustomerRepository()
 
     return AuthService(
         employee_repository,

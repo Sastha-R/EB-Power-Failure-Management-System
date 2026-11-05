@@ -1,11 +1,19 @@
 import os
+from collections.abc import AsyncIterator
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
-from urllib.parse import urlsplit
+from urllib.parse import SplitResult, urlsplit
 
+from fastapi import FastAPI
+from httpx import AsyncClient
 import httpx
 import pytest
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 
 from app import models  # noqa: F401
 from app.core.security import create_access_token
@@ -14,8 +22,8 @@ from app.database.database import DATABASE_URL, get_db
 from app.main import app
 from app.core.config import settings
 
-def _test_database_url():
-    url = settings.TEST_DATABASE_URL
+def _test_database_url() -> str:
+    url: str | None = settings.TEST_DATABASE_URL
 
     if not url:
         pytest.fail("Set TEST_DATABASE_URL in your .env file")
@@ -23,8 +31,8 @@ def _test_database_url():
     if not url.startswith(("postgresql+asyncpg://", "postgresql://")):
         pytest.fail("TEST_DATABASE_URL must use PostgreSQL")
 
-    def identity(value):
-        parsed = urlsplit(
+    def identity(value: str) -> tuple[str | None, int, str]:
+        parsed: SplitResult = urlsplit(
             value.replace("postgresql://", "postgresql+asyncpg://", 1)
         )
         return parsed.hostname, parsed.port or 5432, parsed.path.lstrip("/")
@@ -37,14 +45,14 @@ def _test_database_url():
     return url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
 @pytest.fixture
-def test_database_url():
+def test_database_url() -> str:
     return _test_database_url()
 
 
 @pytest.fixture
-async def db_engine(test_database_url):
+async def db_engine(test_database_url: str) -> AsyncIterator[AsyncEngine]:
 
-    engine = create_async_engine(test_database_url)
+    engine: AsyncEngine = create_async_engine(test_database_url)
     async with engine.begin() as connection:
         await connection.run_sync(Base.metadata.create_all)
     yield engine
@@ -54,23 +62,25 @@ async def db_engine(test_database_url):
 
 
 @pytest.fixture
-async def db_session(db_engine):
+async def db_session(db_engine: AsyncEngine) -> AsyncIterator[AsyncSession]:
 
-    factory = async_sessionmaker(db_engine, expire_on_commit=False)
+    factory: async_sessionmaker[AsyncSession] = async_sessionmaker(
+        db_engine, expire_on_commit=False
+    )
     async with factory() as session:
         yield session
 
 
 @pytest.fixture
-def api_app():
+def api_app() -> FastAPI:
 
     return app
 
 
 @pytest.fixture
-async def api_client(api_app):
+async def api_client(api_app: FastAPI) -> AsyncIterator[AsyncClient]:
 
-    async def fake_db():
+    async def fake_db() -> AsyncIterator[object]:
         yield object()
 
     api_app.dependency_overrides[get_db] = fake_db
@@ -82,33 +92,33 @@ async def api_client(api_app):
 
 
 @pytest.fixture
-def sample_admin():
+def sample_admin() -> SimpleNamespace:
 
     return SimpleNamespace(id=1, role="admin", is_active=True)
 
 
 @pytest.fixture
-def sample_lineman():
+def sample_lineman() -> SimpleNamespace:
 
     return SimpleNamespace(id=2, role="lineman", is_active=True)
 
 
 @pytest.fixture
-def sample_customer():
+def sample_customer() -> SimpleNamespace:
 
     return SimpleNamespace(id=3, email="customer@example.com", is_active=True)
 
 
 @pytest.fixture
-def access_token():
+def access_token() -> str:
 
     return create_access_token(1, "employee", "admin")
 
 
 @pytest.fixture
-def mock_repository():
+def mock_repository() -> MagicMock:
 
-    repository = MagicMock()
+    repository: MagicMock = MagicMock()
     for method in (
         "get_employee_by_email",
         "get_employee_by_username",
@@ -136,10 +146,12 @@ def mock_repository():
 
 
 @pytest.fixture
-def mock_external_operations(monkeypatch):
+def mock_external_operations(
+    monkeypatch: pytest.MonkeyPatch,
+) -> dict[str, MagicMock | AsyncMock]:
 
-    email = MagicMock()
-    upload = AsyncMock(return_value="/tmp/test-upload.png")
+    email: MagicMock = MagicMock()
+    upload: AsyncMock = AsyncMock(return_value="/tmp/test-upload.png")
     monkeypatch.setattr(
         "app.services.implementations.complaint_service.send_complaint_registered_email",
         email,

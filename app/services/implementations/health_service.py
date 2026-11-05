@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class HealthService:
-    async def check_health(self, db: AsyncSession):
+    async def check_health(self, db: AsyncSession) -> dict[str, str]:
         try:
             await db.execute(text("SELECT 1"))
 

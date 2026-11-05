@@ -14,7 +14,7 @@ from app.services.implementations.complaint_report_service import (
     ComplaintReportService,
 )
 
-complaint_report_router = APIRouter(
+complaint_report_router: APIRouter = APIRouter(
     prefix="/reports/complaints", tags=["Complaint Reports"]
 )
 
@@ -28,5 +28,5 @@ async def get_complaint_statistics(
         ComplaintReportService, Depends(get_complaint_report_service)
     ],
     current_admin: Annotated[Employee, Depends(required_admin)],
-):
+) -> ComplaintStatisticsResponse:
     return await report_service.get_complaint_statistics(db)

@@ -7,27 +7,31 @@ from app.exceptions.custom_exceptions.customer_exceptions import (
     CustomerAlreadyExistsError,
     CustomerNotFoundError,
 )
+from app.models.customer import Customer
 from app.repositories.implementations.customer_repository import CustomerRepository
 from app.services.interfaces.customer_service_interface import CustomerServiceInterface
+from app.schemas.customer_schema import CustomerCreate
 from app.exceptions.custom_exceptions.customer_exceptions import (
     CustomerNotFoundError,
     CustomerAlreadyInactiveError,
 )
 
 class CustomerService(CustomerServiceInterface):
-    def __init__(self, customer_repository: CustomerRepository):
+    def __init__(self, customer_repository: CustomerRepository) -> None:
         self.customer_repository = customer_repository
 
-    async def create_customer(self, db: AsyncSession, customer_data):
+    async def create_customer(
+        self, db: AsyncSession, customer_data: CustomerCreate
+    ) -> Customer:
 
-        existing_email = await self.customer_repository.get_customer_by_email(
+        existing_email: Customer | None = await self.customer_repository.get_customer_by_email(
             db, customer_data.email
         )
 
         if existing_email:
             raise CustomerAlreadyExistsError("Customer with this email already exists")
 
-        existing_username = await self.customer_repository.get_customer_by_username(
+        existing_username: Customer | None = await self.customer_repository.get_customer_by_username(
             db, customer_data.username
         )
 
@@ -36,16 +40,20 @@ class CustomerService(CustomerServiceInterface):
                 "Customer with this username already exists"
             )
 
-        customer_dict = customer_data.model_dump()
+        customer_dict: dict[str, object] = customer_data.model_dump()
 
         customer_dict["password"] = hash_password(customer_dict["password"])
         customer_dict["customer_code"] = f"CUS{uuid.uuid4().hex[:8].upper()}"
 
         return await self.customer_repository.create_customer(db, customer_dict)
 
-    async def get_customer_by_id(self, db: AsyncSession, customer_id: int):
+    async def get_customer_by_id(
+        self, db: AsyncSession, customer_id: int
+    ) -> Customer:
 
-        customer = await self.customer_repository.get_customer_by_id(db, customer_id)
+        customer: Customer | None = await self.customer_repository.get_customer_by_id(
+            db, customer_id
+        )
 
         if not customer:
             raise CustomerNotFoundError()
@@ -57,7 +65,7 @@ class CustomerService(CustomerServiceInterface):
         db: AsyncSession,
         limit: int,
         offset: int,
-    ):
+    ) -> list[Customer]:
         return await self.customer_repository.get_all_customers(
             db,
             limit,
@@ -69,8 +77,8 @@ class CustomerService(CustomerServiceInterface):
         self,
         db: AsyncSession,
         customer_id: int,
-    ):
-        customer = await self.customer_repository.get_customer_by_id(
+    ) -> Customer:
+        customer: Customer | None = await self.customer_repository.get_customer_by_id(
             db,
             customer_id,
         )

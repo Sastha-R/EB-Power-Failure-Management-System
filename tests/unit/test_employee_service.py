@@ -1,4 +1,5 @@
 from types import SimpleNamespace
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -12,8 +13,10 @@ from app.services.implementations.employee_service import EmployeeService
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_create_employee_hashes_password_and_sets_lineman(mock_repository):
-    data = SimpleNamespace(
+async def test_create_employee_hashes_password_and_sets_lineman(
+    mock_repository: MagicMock,
+) -> None:
+    data: SimpleNamespace = SimpleNamespace(
         email="a@example.com",
         username="lineman",
         model_dump=lambda: {
@@ -25,24 +28,30 @@ async def test_create_employee_hashes_password_and_sets_lineman(mock_repository)
     mock_repository.get_employee_by_email.return_value = None
     mock_repository.get_employee_by_username.return_value = None
     mock_repository.create_employee.side_effect = lambda db, row: row
-    result = await EmployeeService(mock_repository).create_employee(None, data)
+    result: dict[str, object] = await EmployeeService(
+        mock_repository
+    ).create_employee(None, data)
     assert result["role"] == "lineman" and result["employee_code"].startswith("EMP")
     assert verify_password("password1", result["password"])
 
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_create_employee_rejects_duplicate_email(mock_repository):
+async def test_create_employee_rejects_duplicate_email(
+    mock_repository: MagicMock,
+) -> None:
     mock_repository.get_employee_by_email.return_value = object()
-    data = SimpleNamespace(email="a@example.com", username="x")
+    data: SimpleNamespace = SimpleNamespace(email="a@example.com", username="x")
     with pytest.raises(EmployeeAlreadyExistsError):
         await EmployeeService(mock_repository).create_employee(None, data)
 
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_deactivate_employee_marks_active_employee_inactive(mock_repository):
-    employee = SimpleNamespace(id=1, is_active=True)
+async def test_deactivate_employee_marks_active_employee_inactive(
+    mock_repository: MagicMock,
+) -> None:
+    employee: SimpleNamespace = SimpleNamespace(id=1, is_active=True)
     mock_repository.get_employee_by_id.return_value = employee
     mock_repository.deactivate_employee.return_value = employee
     assert (
@@ -53,7 +62,9 @@ async def test_deactivate_employee_marks_active_employee_inactive(mock_repositor
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_deactivate_employee_rejects_already_inactive(mock_repository):
+async def test_deactivate_employee_rejects_already_inactive(
+    mock_repository: MagicMock,
+) -> None:
     mock_repository.get_employee_by_id.return_value = SimpleNamespace(is_active=False)
     with pytest.raises(EmployeeAlreadyInactiveError):
         await EmployeeService(mock_repository).deactivate_employee(None, 1)

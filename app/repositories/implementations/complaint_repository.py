@@ -1,4 +1,5 @@
 from sqlalchemy import select
+from sqlalchemy.engine import Result
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.complaint import Complaint
@@ -9,8 +10,10 @@ from app.repositories.interfaces.complaint_repository_interface import (
 
 
 class ComplaintRepository(ComplaintRepositoryInterface):
-    async def create_complaint(self, db: AsyncSession, complaint_data: dict):
-        complaint = Complaint(**complaint_data)
+    async def create_complaint(
+        self, db: AsyncSession, complaint_data: dict[str, object]
+    ) -> Complaint:
+        complaint: Complaint = Complaint(**complaint_data)
 
         db.add(complaint)
 
@@ -19,21 +22,25 @@ class ComplaintRepository(ComplaintRepositoryInterface):
 
         return complaint
 
-    async def get_customer_complaints(self, db: AsyncSession, customer_id: int):
+    async def get_customer_complaints(
+        self, db: AsyncSession, customer_id: int
+    ) -> list[Complaint]:
         result = await db.execute(
             select(Complaint).where(Complaint.customer_id == customer_id)
         )
 
         return result.scalars().all()
 
-    async def get_all_complaints(self, db: AsyncSession):
+    async def get_all_complaints(self, db: AsyncSession) -> list[Complaint]:
 
         result = await db.execute(select(Complaint))
 
         return result.scalars().all()
 
-    async def assign_complaint(self, db: AsyncSession, assignment_data: dict):
-        assignment = ComplaintAssignment(**assignment_data)
+    async def assign_complaint(
+        self, db: AsyncSession, assignment_data: dict[str, object]
+    ) -> ComplaintAssignment:
+        assignment: ComplaintAssignment = ComplaintAssignment(**assignment_data)
 
         db.add(assignment)
 
@@ -42,12 +49,18 @@ class ComplaintRepository(ComplaintRepositoryInterface):
 
         return assignment
 
-    async def get_complaint_by_id(self, db: AsyncSession, complaint_id: int):
-        result = await db.execute(select(Complaint).where(Complaint.id == complaint_id))
+    async def get_complaint_by_id(
+        self, db: AsyncSession, complaint_id: int
+    ) -> Complaint | None:
+        result = await db.execute(
+            select(Complaint).where(Complaint.id == complaint_id)
+        )
 
         return result.scalar_one_or_none()
 
-    async def get_assigned_complaints(self, db: AsyncSession, lineman_id: int):
+    async def get_assigned_complaints(
+        self, db: AsyncSession, lineman_id: int
+    ) -> list[Complaint]:
         result = await db.execute(
             select(Complaint)
             .join(ComplaintAssignment, Complaint.id == ComplaintAssignment.complaint_id)
@@ -56,7 +69,9 @@ class ComplaintRepository(ComplaintRepositoryInterface):
 
         return result.scalars().all()
 
-    async def close_complaint(self, db, complaint):
+    async def close_complaint(
+        self, db: AsyncSession, complaint: Complaint
+    ) -> Complaint:
 
         complaint.status = "CLOSED"
 
@@ -65,7 +80,9 @@ class ComplaintRepository(ComplaintRepositoryInterface):
 
         return complaint
 
-    async def update_complaint_image(self, db, complaint, image_path: str):
+    async def update_complaint_image(
+        self, db: AsyncSession, complaint: Complaint, image_path: str
+    ) -> Complaint:
 
         complaint.image_path = image_path
 
@@ -77,9 +94,9 @@ class ComplaintRepository(ComplaintRepositoryInterface):
     async def update_complaint(
         self,
         db: AsyncSession,
-        complaint,
-        complaint_data: dict,
-    ):
+        complaint: Complaint,
+        complaint_data: dict[str, object],
+    ) -> Complaint:
         for key, value in complaint_data.items():
             setattr(complaint, key, value)
 

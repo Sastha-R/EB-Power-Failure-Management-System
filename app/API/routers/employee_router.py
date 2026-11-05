@@ -1,3 +1,4 @@
+from typing import Any
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
@@ -11,7 +12,7 @@ from app.schemas.employee_schema import EmployeeCreate, EmployeeResponse
 from app.services.implementations.employee_service import EmployeeService
 from fastapi import Query
 
-employee_router = APIRouter(prefix="/employees", tags=["Employees"])
+employee_router: APIRouter = APIRouter(prefix="/employees", tags=["Employees"])
 
 
 @employee_router.post(
@@ -33,7 +34,7 @@ async def get_all_employees(
     db: AsyncSession = Depends(get_db),
     employee_service: EmployeeService = Depends(get_employee_service),
     current_admin: Employee = Depends(required_admin),
-):
+) :
     return await employee_service.get_all_employees(
         db,
         limit,
@@ -47,7 +48,7 @@ async def get_employee_by_id(
     db: Annotated[AsyncSession, Depends(get_db)],
     employee_service: Annotated[EmployeeService, Depends(get_employee_service)],
     current_admin: Annotated[Employee, Depends(required_admin)],
-):
+) -> EmployeeResponse:
     return await employee_service.get_employee_by_id(db, employee_id)
 
 
@@ -55,8 +56,8 @@ async def get_employee_by_id(
 async def deactivate_employee(
     employee_id: int,
     db: AsyncSession = Depends(get_db),
-    current_employee=Depends(required_admin),
-    employee_service=Depends(get_employee_service),
+    current_employee: Employee = Depends(required_admin),
+    employee_service: EmployeeService = Depends(get_employee_service),
 ):
     return await employee_service.deactivate_employee(db, employee_id)
 

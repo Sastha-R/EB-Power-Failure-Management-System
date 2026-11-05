@@ -9,7 +9,9 @@ from app.services.interfaces.complaint_report_service_interface import (
 
 
 class ComplaintReportService(ComplaintReportServiceInterface):
-    def __init__(self, complaint_report_repository: ComplaintReportRepository):
+    def __init__(
+        self, complaint_report_repository: ComplaintReportRepository
+    ) -> None:
         self.complaint_report_repository = complaint_report_repository
 
     async def get_complaint_statistics(self, db: AsyncSession) -> dict[str, int]:

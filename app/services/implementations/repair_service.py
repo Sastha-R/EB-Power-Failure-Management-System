@@ -9,8 +9,12 @@ from app.exceptions.custom_exceptions.repair_exceptions import (
     RepairNotAssignedError,
     RepairNotFoundError,
 )
+from app.models.repair_detail import RepairDetail
+from app.models.complaint import Complaint
+from app.models.complaint_assignment import ComplaintAssignment
 from app.repositories.implementations.complaint_repository import ComplaintRepository
 from app.repositories.implementations.repair_repository import RepairRepository
+from app.schemas.repair_schema import RepairCreate
 from app.services.interfaces.repair_service_interface import RepairServiceInterface
 from app.utils.file_upload import upload_image
 
@@ -20,15 +24,19 @@ class RepairService(RepairServiceInterface):
         self,
         repair_repository: RepairRepository,
         complaint_repository: ComplaintRepository,
-    ):
+    ) -> None:
         self.repair_repository = repair_repository
         self.complaint_repository = complaint_repository
 
     async def complete_repair(
-        self, db, complaint_id: int, lineman_id: int, repair_data
-    ):
+        self,
+        db: AsyncSession,
+        complaint_id: int,
+        lineman_id: int,
+        repair_data: RepairCreate,
+    ) -> RepairDetail:
         # Check whether complaint exists
-        complaint = await self.complaint_repository.get_complaint_by_id(
+        complaint: Complaint | None = await self.complaint_repository.get_complaint_by_id(
             db, complaint_id
         )
 
@@ -36,7 +44,7 @@ class RepairService(RepairServiceInterface):
             raise ComplaintNotFoundError()
 
         # Check whether complaint is assigned to this lineman
-        assignment = await self.repair_repository.get_assignment(
+        assignment: ComplaintAssignment | None = await self.repair_repository.get_assignment(
             db, complaint_id, lineman_id
         )
 
@@ -50,7 +58,7 @@ class RepairService(RepairServiceInterface):
             )
 
         # Prevent duplicate repair submission
-        existing_repair = await self.repair_repository.get_repair_by_complaint_id(
+        existing_repair: RepairDetail | None = await self.repair_repository.get_repair_by_complaint_id(
             db, complaint_id
         )
 
@@ -64,7 +72,9 @@ class RepairService(RepairServiceInterface):
 
         try:
             # Save repair details
-            repair = await self.repair_repository.create_repair(db, repair_dict)
+            repair: RepairDetail = await self.repair_repository.create_repair(
+                db, repair_dict
+            )
 
             # Update complaint status
             complaint.status = "REPAIR_COMPLETED"
@@ -79,16 +89,20 @@ class RepairService(RepairServiceInterface):
             raise
 
     async def upload_repair_image(
-        self, db, complaint_id: int, lineman_id: int, image: UploadFile
-    ):
-        complaint = await self.complaint_repository.get_complaint_by_id(
+        self,
+        db: AsyncSession,
+        complaint_id: int,
+        lineman_id: int,
+        image: UploadFile,
+    ) -> RepairDetail:
+        complaint: Complaint | None = await self.complaint_repository.get_complaint_by_id(
             db, complaint_id
         )
 
         if not complaint:
             raise ComplaintNotFoundError()
 
-        assignment = await self.repair_repository.get_assignment(
+        assignment: ComplaintAssignment | None = await self.repair_repository.get_assignment(
             db, complaint_id, lineman_id
         )
 
@@ -100,19 +114,19 @@ class RepairService(RepairServiceInterface):
                 "Repair image can only be uploaded after repair completion"
             )
 
-        repair = await self.repair_repository.get_repair_by_complaint_id(
+        repair: RepairDetail | None = await self.repair_repository.get_repair_by_complaint_id(
             db, complaint_id
         )
 
         if not repair:
             raise RepairNotFoundError("Repair details not found")
 
-        image_path = await upload_image(
+        image_path: str = await upload_image(
             image,
             settings.REPAIR_UPLOAD_DIR,
         )
 
         return await self.repair_repository.update_repair_image(db, repair, image_path)
 
-    async def get_all_repair_details(self, db: AsyncSession):
+    async def get_all_repair_details(self, db: AsyncSession) -> list[RepairDetail]:
         return await self.repair_repository.get_all_repair_details(db)

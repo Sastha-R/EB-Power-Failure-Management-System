@@ -1,3 +1,5 @@
+from typing import Any
+
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,7 +12,7 @@ from typing import Annotated
 from app.models.employee import Employee
 from app.api.dependencies.auth_dependency import required_admin
 from fastapi import Query
-customer_router = APIRouter(prefix="/customers", tags=["Customers"])
+customer_router: APIRouter = APIRouter(prefix="/customers", tags=["Customers"])
 
 
 @customer_router.post(
@@ -20,7 +22,7 @@ async def create_customer(
     customer_data: CustomerCreate,
     db: Annotated[AsyncSession , Depends(get_db)],
     customer_service: Annotated[CustomerService , Depends(get_customer_service)],
-):
+) -> CustomerResponse:
     return await customer_service.create_customer(db, customer_data)
 
 
@@ -31,7 +33,7 @@ async def get_all_customers(
     db: AsyncSession = Depends(get_db),
     customer_service: CustomerService = Depends(get_customer_service),
     current_admin: Employee = Depends(required_admin),
-):
+) :
     return await customer_service.get_all_customers(
         db,
         limit,
@@ -46,7 +48,7 @@ async def get_customer_by_id(
     customer_service: Annotated[CustomerService , Depends(get_customer_service)],
     current_admin: Annotated[Employee, Depends(required_admin)]
 
-):
+) -> CustomerResponse:
     return await customer_service.get_customer_by_id(db, customer_id)
 
 
@@ -56,7 +58,7 @@ async def deactivate_customer(
     db: AsyncSession = Depends(get_db),
     customer_service: CustomerService = Depends(get_customer_service),
     current_admin: Employee = Depends(required_admin),
-):
+) :
     return await customer_service.deactivate_customer(
         db,
         customer_id,

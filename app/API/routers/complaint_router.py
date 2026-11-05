@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, File, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,7 +20,7 @@ from app.schemas.complaint_schema import (
 )
 from app.services.implementations.complaint_service import ComplaintService
 
-complaint_router = APIRouter(prefix="/complaints", tags=["Complaints"])
+complaint_router: APIRouter = APIRouter(prefix="/complaints", tags=["Complaints"])
 
 
 @complaint_router.post("/", status_code=status.HTTP_201_CREATED)
@@ -29,7 +29,7 @@ async def create_complaint(
     current_customer: Annotated[Customer, Depends(get_current_customer)],
     db: Annotated[AsyncSession, Depends(get_db)],
     complaint_service: Annotated[ComplaintService, Depends(get_complaint_service)],
-):
+) :
     return await complaint_service.create_complaint(
         db, current_customer.id, complaint_data
     )
@@ -40,7 +40,7 @@ async def get_my_complaints(
     current_customer: Annotated[Customer, Depends(get_current_customer)],
     db: Annotated[AsyncSession, Depends(get_db)],
     complaint_service: Annotated[ComplaintService, Depends(get_complaint_service)],
-):
+) :
     return await complaint_service.get_customer_complaints(db, current_customer.id)
 
 
@@ -49,7 +49,7 @@ async def get_all_complaints(
     current_admin: Annotated[Employee, Depends(required_admin)],
     db: Annotated[AsyncSession, Depends(get_db)],
     complaint_service: Annotated[ComplaintService, Depends(get_complaint_service)],
-):
+) :
     return await complaint_service.get_all_complaints(db)
 
 
@@ -59,7 +59,7 @@ async def assign_complaint(
     current_admin: Annotated[Employee, Depends(required_admin)],
     db: Annotated[AsyncSession, Depends(get_db)],
     complaint_service: Annotated[ComplaintService, Depends(get_complaint_service)],
-):
+) :
     return await complaint_service.assign_complaint(
         db, current_admin.id, assignment_data
     )
@@ -70,7 +70,7 @@ async def get_assigned_complaints(
     current_employee: Annotated[Employee, Depends(required_lineman)],
     db: Annotated[AsyncSession, Depends(get_db)],
     complaint_service: Annotated[ComplaintService, Depends(get_complaint_service)],
-):
+) :
     return await complaint_service.get_assigned_complaints(db, current_employee.id)
 
 
@@ -80,7 +80,7 @@ async def close_complaint(
     current_admin: Annotated[Employee, Depends(required_admin)],
     db: Annotated[AsyncSession, Depends(get_db)],
     complaint_service: Annotated[ComplaintService, Depends(get_complaint_service)],
-):
+) :
     return await complaint_service.close_complaint(db, complaint_id)
 
 
@@ -91,7 +91,7 @@ async def upload_complaint_image(
     current_customer: Annotated[Customer, Depends(get_current_customer)],
     db: Annotated[AsyncSession, Depends(get_db)],
     complaint_service: Annotated[ComplaintService, Depends(get_complaint_service)],
-):
+) :
     return await complaint_service.upload_complaint_image(
         db,
         complaint_id,
@@ -108,9 +108,9 @@ async def update_complaint(
     complaint_id: int,
     complaint_data: ComplaintUpdate,
     db: AsyncSession = Depends(get_db),
-    current_customer=Depends(get_current_customer),
-    complaint_service=Depends(get_complaint_service),
-):
+    current_customer: Customer = Depends(get_current_customer),
+    complaint_service: ComplaintService = Depends(get_complaint_service),
+) -> ComplaintResponse:
     return await complaint_service.update_complaint(
         db,
         complaint_id,

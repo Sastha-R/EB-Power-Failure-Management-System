@@ -1,4 +1,5 @@
 from sqlalchemy import select
+from sqlalchemy.engine import Result
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Employee
@@ -8,8 +9,10 @@ from app.repositories.interfaces.employee_repository_interface import (
 
 
 class EmployeeRepository(EmployeeRepositoryInterface):
-    async def create_employee(self, db: AsyncSession, employee_data: dict):
-        employee = Employee(**employee_data)
+    async def create_employee(
+        self, db: AsyncSession, employee_data: dict[str, object]
+    ) -> Employee:
+        employee: Employee = Employee(**employee_data)
 
         db.add(employee)
 
@@ -19,18 +22,30 @@ class EmployeeRepository(EmployeeRepositoryInterface):
 
         return employee
 
-    async def get_employee_by_id(self, db: AsyncSession, employee_id: int):
-        result = await db.execute(select(Employee).where(Employee.id == employee_id))
+    async def get_employee_by_id(
+        self, db: AsyncSession, employee_id: int
+    ) -> Employee | None:
+        result = await db.execute(
+            select(Employee).where(Employee.id == employee_id)
+        )
 
         return result.scalar_one_or_none()
 
-    async def get_employee_by_email(self, db: AsyncSession, email: str):
-        result = await db.execute(select(Employee).where(Employee.email == email))
+    async def get_employee_by_email(
+        self, db: AsyncSession, email: str
+    ) -> Employee | None:
+        result = await db.execute(
+            select(Employee).where(Employee.email == email)
+        )
 
         return result.scalar_one_or_none()
 
-    async def get_employee_by_username(self, db: AsyncSession, username: str):
-        result = await db.execute(select(Employee).where(Employee.username == username))
+    async def get_employee_by_username(
+        self, db: AsyncSession, username: str
+    ) -> Employee | None:
+        result = await db.execute(
+            select(Employee).where(Employee.username == username)
+        )
 
         return result.scalar_one_or_none()
 
@@ -39,7 +54,7 @@ class EmployeeRepository(EmployeeRepositoryInterface):
             db: AsyncSession,
             limit: int,
             offset: int,
-        ):
+    ) -> list[Employee]:
             result = await db.execute(
                 select(Employee)
                 .limit(limit)
@@ -52,8 +67,8 @@ class EmployeeRepository(EmployeeRepositoryInterface):
     async def deactivate_employee(
         self,
         db: AsyncSession,
-        employee,
-    ):
+        employee: Employee,
+    ) -> Employee:
         employee.is_active = False
 
         await db.commit()

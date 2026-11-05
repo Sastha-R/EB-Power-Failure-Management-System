@@ -1,5 +1,10 @@
 import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.complaint import Complaint
+from app.models.complaint_assignment import ComplaintAssignment
+from app.models.customer import Customer
+from app.models.employee import Employee
 from app.repositories.implementations.complaint_repository import ComplaintRepository
 from app.repositories.implementations.customer_repository import CustomerRepository
 from app.repositories.implementations.employee_repository import EmployeeRepository
@@ -7,8 +12,10 @@ from app.repositories.implementations.employee_repository import EmployeeReposit
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_assignment_repository_create_and_list_by_lineman(db_session):
-    customer = await CustomerRepository().create_customer(
+async def test_assignment_repository_create_and_list_by_lineman(
+    db_session: AsyncSession,
+) -> None:
+    customer: Customer = await CustomerRepository().create_customer(
         db_session,
         {
             "customer_code": "CUSASNINT01",
@@ -22,8 +29,8 @@ async def test_assignment_repository_create_and_list_by_lineman(db_session):
             "pincode": "600001",
         },
     )
-    employee_repository = EmployeeRepository()
-    lineman = await employee_repository.create_employee(
+    employee_repository: EmployeeRepository = EmployeeRepository()
+    lineman: Employee = await employee_repository.create_employee(
         db_session,
         {
             "employee_code": "EMPASNINT01",
@@ -38,7 +45,7 @@ async def test_assignment_repository_create_and_list_by_lineman(db_session):
             "pincode": "600001",
         },
     )
-    admin = await employee_repository.create_employee(
+    admin: Employee = await employee_repository.create_employee(
         db_session,
         {
             "employee_code": "EMPASNINT02",
@@ -53,8 +60,8 @@ async def test_assignment_repository_create_and_list_by_lineman(db_session):
             "pincode": "600001",
         },
     )
-    complaint_repository = ComplaintRepository()
-    complaint = await complaint_repository.create_complaint(
+    complaint_repository: ComplaintRepository = ComplaintRepository()
+    complaint: Complaint = await complaint_repository.create_complaint(
         db_session,
         {
             "complaint_number": "CMPASNINT01",
@@ -68,7 +75,7 @@ async def test_assignment_repository_create_and_list_by_lineman(db_session):
         },
     )
 
-    assignment = await complaint_repository.assign_complaint(
+    assignment: ComplaintAssignment = await complaint_repository.assign_complaint(
         db_session,
         {
             "complaint_id": complaint.id,
@@ -77,7 +84,7 @@ async def test_assignment_repository_create_and_list_by_lineman(db_session):
             "remarks": "Please inspect the local line",
         },
     )
-    assigned = await complaint_repository.get_assigned_complaints(
+    assigned: list[Complaint] = await complaint_repository.get_assigned_complaints(
         db_session, lineman.id
     )
 

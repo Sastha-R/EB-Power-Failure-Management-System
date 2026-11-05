@@ -3,9 +3,9 @@ from app.repositories.implementations.complaint_repository import ComplaintRepos
 from app.services.implementations.repair_service import RepairService
 
 
-def get_repair_service():
-    repair_repository = RepairRepository()
-    complaint_repository = ComplaintRepository()
+def get_repair_service() -> RepairService:
+    repair_repository: RepairRepository = RepairRepository()
+    complaint_repository: ComplaintRepository = ComplaintRepository()
 
     return RepairService(
         repair_repository,

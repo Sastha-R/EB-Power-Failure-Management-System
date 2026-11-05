@@ -208,19 +208,6 @@ There is no uniqueness constraint on complaint assignment rows, so the table can
 
 The unique constraint on `repair_details.complaint_id` permits at most one repair detail record per complaint.
 
-### Foreign-key diagram
-
-```mermaid
-erDiagram
-    CUSTOMERS ||--o{ COMPLAINTS : registers
-    COMPLAINTS ||--o{ COMPLAINT_ASSIGNMENTS : receives
-    EMPLOYEES ||--o{ COMPLAINT_ASSIGNMENTS : assigned_lineman
-    EMPLOYEES ||--o{ COMPLAINT_ASSIGNMENTS : assigns
-    COMPLAINTS ||--o| REPAIR_DETAILS : has
-    EMPLOYEES ||--o{ REPAIR_DETAILS : completes
-```
-
-The diagram represents foreign keys only. There are no ORM relationship properties declared in the model classes.
 
 ## API reference
 
@@ -288,7 +275,6 @@ The statistics response is shaped as follows; values are calculated from the dat
   "assigned": 0,
   "repair_completed": 0,
   "closed": 0,
-  "rejected": 0
 }
 ```
 
@@ -390,12 +376,6 @@ pytest tests/unit/ -v
 pytest tests/integration/ -v
 pytest tests/api/ -v
 
-# Coverage (pytest-cov is listed in requirements.txt)
-pytest --cov=app
-pytest --cov=app --cov-report=term-missing
-```
-
-Run unit and API tests without PostgreSQL as needed. Integration tests and the full suite require the isolated test database described in [local setup](#local-setup-windows-powershell).
 
 ## Python and software engineering concepts
 
@@ -426,8 +406,8 @@ python -m pip install -r requirements.txt
 Create a local PostgreSQL database using your preferred PostgreSQL client. For example, in `psql`:
 
 ```sql
-CREATE DATABASE eb_power_failure;
-CREATE DATABASE eb_power_failure_test;
+CREATE DATABASE eb_management;
+CREATE DATABASE eb_management_test;
 ```
 
 The test database must be separate and disposable because the integration fixture creates and drops the model tables.
@@ -441,27 +421,27 @@ DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=your_development_database
 DB_USER=your_postgres_user
-DB_PASSWORD=replace_with_local_database_password
+DB_PASSWORD=database_password
 
-JWT_SECRET_KEY=replace_with_a_long_random_secret
+JWT_SECRET_KEY=secret_key
 JWT_ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=replace_with_integer_minutes
-REFRESH_TOKEN_EXPIRE_DAYS=replace_with_integer_days
+ACCESS_TOKEN_EXPIRE_MINUTES=integer_minutes
+REFRESH_TOKEN_EXPIRE_DAYS=integer_days
 
 COMPLAINT_UPLOAD_DIR=uploads/complaints
 REPAIR_UPLOAD_DIR=uploads/repairs
-MAX_FILE_SIZE=replace_with_maximum_size_in_bytes
+MAX_FILE_SIZE=size_in_bytes
 
-SMTP_HOST=replace_with_smtp_host
-SMTP_PORT=replace_with_integer_port
-SMTP_USERNAME=replace_with_smtp_username
-SMTP_PASSWORD=replace_with_smtp_password
-SMTP_FROM_EMAIL=replace_with_sender_address
+SMTP_HOST=smtp_host
+SMTP_PORT=integer_port
+SMTP_USERNAME=smtp_username
+SMTP_PASSWORD=smtp_password
+SMTP_FROM_EMAIL=sender_address
 
 TEST_DATABASE_URL=postgresql+asyncpg://your_postgres_user:replace_with_password@localhost:5432/eb_power_failure_test
 ```
 
-The placeholder values such as `replace_with_integer_minutes` are documentation placeholders; replace them with correctly typed values before starting the app. `TEST_DATABASE_URL` must point to a database distinct from the configured application database.
+`TEST_DATABASE_URL` must point to a database distinct from the configured application database.
 
 ### 4. Apply migrations and create an administrator
 
@@ -492,25 +472,3 @@ Ensure `.env` contains a valid `TEST_DATABASE_URL` for the isolated test databas
 ```powershell
 pytest tests/integration/ -v
 ```
-
-## Limitations and possible improvements
-
-### Current implementation limits
-
-- No rejection route or business transition sets the `REJECTED` status, even though the statistics query reports rows with that status.
-- The upload helper creates the caller-provided upload directory but writes to the configured complaint directory. Repair images therefore do not currently use the separate repair directory as intended.
-- Upload validation checks only the filename extension and configured size. It does not validate file contents or MIME type. The size error text is fixed at 5 MB while the enforced threshold comes from configuration.
-- SMTP failures are logged and swallowed, so complaint operations can still return successfully even when notification delivery fails.
-- Customer registration is public. No email verification, password reset, token revocation, or token refresh rotation is implemented in the current API.
-- The admin creation script contains default account values in source code. Configure secure values before using it.
-- The latest migration downgrade references an unnamed constraint and should be reviewed before attempting that downgrade.
-- API tests do not currently cover complaint image upload. Test counts and endpoint tests do not establish complete coverage.
-
-### Possible future work
-
-- Correct upload destination handling and add content-type/content-signature validation.
-- Move initial administrator creation values to a secure, non-committed configuration path.
-- Add an explicit rejection workflow only if the business rules require one.
-- Add complaint image API tests and tests for remaining negative authorization, validation, and not-found cases.
-- Add email delivery monitoring/retry handling and account recovery/verification flows if required.
-- Review migration downgrade reversibility and add explicit constraint names.

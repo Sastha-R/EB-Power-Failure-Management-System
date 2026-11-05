@@ -1,15 +1,21 @@
 from abc import ABC, abstractmethod
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.models.customer import Customer
+from app.schemas.customer_schema import CustomerCreate
 
 
 class CustomerServiceInterface(ABC):
     @abstractmethod
-    async def create_customer(self, db: AsyncSession, customer_data):
+    async def create_customer(
+        self, db: AsyncSession, customer_data: CustomerCreate
+    ) -> Customer:
         pass
 
     @abstractmethod
-    async def get_customer_by_id(self, db: AsyncSession, customer_id: int):
+    async def get_customer_by_id(
+        self, db: AsyncSession, customer_id: int
+    ) -> Customer:
         pass
 
     @abstractmethod
@@ -18,7 +24,7 @@ class CustomerServiceInterface(ABC):
         db: AsyncSession,
         limit: int,
         offset: int,
-    ):
+    ) -> list[Customer]:
         pass
 
     @abstractmethod
@@ -26,5 +32,5 @@ class CustomerServiceInterface(ABC):
         self,
         db: AsyncSession,
         customer_id: int,
-    ):
+    ) -> Customer:
         pass

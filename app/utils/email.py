@@ -3,19 +3,21 @@ import smtplib
 from email.message import EmailMessage
 from pathlib import Path
 
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, Template
 
 from app.core.config import settings
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR: Path = Path(__file__).resolve().parent.parent
 
-template_env = Environment(loader=FileSystemLoader(BASE_DIR / "templates"))
+template_env: Environment = Environment(
+    loader=FileSystemLoader(BASE_DIR / "templates")
+)
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
-def load_email_template(template_name: str, context: dict):
-    template = template_env.get_template(template_name)
+def load_email_template(template_name: str, context: dict[str, str]) -> str:
+    template: Template = template_env.get_template(template_name)
     return template.render(context)
 
 
@@ -24,9 +26,9 @@ def send_email(
     subject: str,
     html_content: str,
     text_content: str = "Please view this email in an HTML-compatible email client.",
-):
+) -> None:
     try:
-        message = EmailMessage()
+        message: EmailMessage = EmailMessage()
 
         message["From"] = settings.SMTP_FROM_EMAIL
         message["To"] = to_email
@@ -38,6 +40,7 @@ def send_email(
         # HTML email content
         message.add_alternative(html_content, subtype="html")
 
+        server: smtplib.SMTP
         with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
             server.starttls()
             server.login(
@@ -53,8 +56,8 @@ def send_email(
 def send_complaint_registered_email(
     customer_email: str,
     complaint_number: str,
-):
-    html_content = load_email_template(
+) -> None:
+    html_content: str = load_email_template(
         "complaint_registered.html",
         {
             "complaint_number": complaint_number,
@@ -75,8 +78,8 @@ def send_complaint_registered_email(
 def send_complaint_closed_email(
     customer_email: str,
     complaint_number: str,
-):
-    html_content = load_email_template(
+) -> None:
+    html_content: str = load_email_template(
         "complaint_closed.html",
         {
             "complaint_number": complaint_number,

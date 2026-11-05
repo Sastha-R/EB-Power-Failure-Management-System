@@ -1,11 +1,12 @@
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import jwt
 from pwdlib import PasswordHash
 
 from app.core.config import settings
 
-password_hash = PasswordHash.recommended()
+password_hash: PasswordHash = PasswordHash.recommended()
 
 
 # Password hashing
@@ -23,9 +24,11 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 # Access token generation
 def create_access_token(user_id: int, user_type: str, role: str | None = None) -> str:
 
-    expire = datetime.now(UTC) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire: datetime = datetime.now(UTC) + timedelta(
+        minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+    )
 
-    payload = {
+    payload: dict[str, str | datetime] = {
         "sub": str(user_id),
         "user_type": user_type,
         "token_type": "access",
@@ -43,9 +46,11 @@ def create_access_token(user_id: int, user_type: str, role: str | None = None) -
 # Refresh token generation
 def create_refresh_token(user_id: int, user_type: str, role: str | None = None) -> str:
 
-    expire = datetime.now(UTC) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    expire: datetime = datetime.now(UTC) + timedelta(
+        days=settings.REFRESH_TOKEN_EXPIRE_DAYS
+    )
 
-    payload = {
+    payload: dict[str, str | datetime] = {
         "sub": str(user_id),
         "user_type": user_type,
         "token_type": "refresh",
@@ -61,7 +66,7 @@ def create_refresh_token(user_id: int, user_type: str, role: str | None = None) 
 
 
 # Token decoding
-def decode_token(token: str) -> dict:
+def decode_token(token: str) -> dict[str, Any]:
 
     return jwt.decode(
         token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]

@@ -1,3 +1,4 @@
+from typing import Any
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, UploadFile, status
@@ -10,7 +11,7 @@ from app.models.employee import Employee
 from app.schemas.repair_schema import RepairCreate, RepairResponse
 from app.services.implementations.repair_service import RepairService
 
-repair_router = APIRouter(prefix="/repairs", tags=["Repairs"])
+repair_router: APIRouter = APIRouter(prefix="/repairs", tags=["Repairs"])
 
 
 @repair_router.post(
@@ -24,7 +25,7 @@ async def complete_repair(
     current_lineman: Annotated[Employee, Depends(required_lineman)],
     db: Annotated[AsyncSession, Depends(get_db)],
     repair_service: Annotated[RepairService, Depends(get_repair_service)],
-):
+) -> RepairResponse:
     return await repair_service.complete_repair(
         db, complaint_id, current_lineman.id, repair_data
     )
@@ -49,7 +50,7 @@ async def upload_repair_image(
 @repair_router.get("/", response_model=list[RepairResponse])
 async def get_all_repair_details(
     db: AsyncSession = Depends(get_db),
-    current_employee=Depends(required_admin),
-    repair_service=Depends(get_repair_service),
-):
+    current_employee: Employee = Depends(required_admin),
+    repair_service: RepairService = Depends(get_repair_service),
+) -> list[RepairResponse]:
     return await repair_service.get_all_repair_details(db)

@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -12,15 +13,21 @@ from app.services.implementations.repair_service import RepairService
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_complete_repair_commits_and_updates_status(mock_repository):
-    complaint = SimpleNamespace(status="ASSIGNED")
-    repair = object()
+async def test_complete_repair_commits_and_updates_status(
+    mock_repository: MagicMock,
+) -> None:
+    complaint: SimpleNamespace = SimpleNamespace(status="ASSIGNED")
+    repair: object = object()
     mock_repository.get_complaint_by_id.return_value = complaint
     mock_repository.get_assignment.return_value = object()
     mock_repository.get_repair_by_complaint_id.return_value = None
     mock_repository.create_repair.return_value = repair
-    db = SimpleNamespace(commit=AsyncMock(), refresh=AsyncMock(), rollback=AsyncMock())
-    result = await RepairService(mock_repository, mock_repository).complete_repair(
+    db: SimpleNamespace = SimpleNamespace(
+        commit=AsyncMock(), refresh=AsyncMock(), rollback=AsyncMock()
+    )
+    result: object = await RepairService(
+        mock_repository, mock_repository
+    ).complete_repair(
         db,
         4,
         2,
@@ -37,7 +44,9 @@ async def test_complete_repair_commits_and_updates_status(mock_repository):
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_complete_repair_requires_assignment(mock_repository):
+async def test_complete_repair_requires_assignment(
+    mock_repository: MagicMock,
+) -> None:
     mock_repository.get_complaint_by_id.return_value = SimpleNamespace(
         status="ASSIGNED"
     )
@@ -50,7 +59,9 @@ async def test_complete_repair_requires_assignment(mock_repository):
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_complete_repair_rejects_duplicate(mock_repository):
+async def test_complete_repair_rejects_duplicate(
+    mock_repository: MagicMock,
+) -> None:
     mock_repository.get_complaint_by_id.return_value = SimpleNamespace(
         status="ASSIGNED"
     )
@@ -65,15 +76,18 @@ async def test_complete_repair_rejects_duplicate(mock_repository):
 @pytest.mark.asyncio
 @pytest.mark.unit
 async def test_upload_repair_image_delegates_to_storage(
-    mock_repository, mock_external_operations
-):
-    complaint = SimpleNamespace(status="REPAIR_COMPLETED")
-    repair = SimpleNamespace()
+    mock_repository: MagicMock,
+    mock_external_operations: dict[str, MagicMock | AsyncMock],
+) -> None:
+    complaint: SimpleNamespace = SimpleNamespace(status="REPAIR_COMPLETED")
+    repair: SimpleNamespace = SimpleNamespace()
     mock_repository.get_complaint_by_id.return_value = complaint
     mock_repository.get_assignment.return_value = object()
     mock_repository.get_repair_by_complaint_id.return_value = repair
     mock_repository.update_repair_image.return_value = repair
-    result = await RepairService(mock_repository, mock_repository).upload_repair_image(
+    result: SimpleNamespace = await RepairService(
+        mock_repository, mock_repository
+    ).upload_repair_image(
         None, 1, 2, object()
     )
     assert result is repair

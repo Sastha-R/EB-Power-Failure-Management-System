@@ -1,6 +1,10 @@
+from typing import Any
+
 import jwt
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.models.customer import Customer
+from app.models.employee import Employee
 
 from app.core.security import (
     create_access_token,
@@ -18,12 +22,16 @@ class AuthService(AuthServiceInterface):
         self,
         employee_repository: EmployeeRepository,
         customer_repository: CustomerRepository,
-    ):
+    ) -> None:
         self.employee_repository = employee_repository
         self.customer_repository = customer_repository
 
-    async def employee_login(self, db: AsyncSession, email: str, password: str):
-        employee = await self.employee_repository.get_employee_by_email(db, email)
+    async def employee_login(
+        self, db: AsyncSession, email: str, password: str
+    ) -> dict[str, str]:
+        employee: Employee | None = await self.employee_repository.get_employee_by_email(
+            db, email
+        )
 
         if employee:
             if not verify_password(password, employee.password):
@@ -50,7 +58,9 @@ class AuthService(AuthServiceInterface):
 
         return await self.customer_login(db, email, password)
 
-    async def refresh_access_token(self, db: AsyncSession, refresh_token: str):
+    async def refresh_access_token(
+        self, db: AsyncSession, refresh_token: str
+    ) -> dict[str, str]:
         try:
             payload = decode_token(refresh_token)
 
@@ -60,14 +70,16 @@ class AuthService(AuthServiceInterface):
                     detail="Invalid refresh token",
                 )
 
-            user_id = int(payload.get("sub"))
-            user_type = payload.get("user_type")
+            user_id: int = int(payload.get("sub"))
+            user_type: str | None = payload.get("user_type")
 
         except (jwt.InvalidTokenError, ValueError, TypeError):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid or expired refresh token",
             )
+
+       
 
         if user_type == "employee":
             user = await self.employee_repository.get_employee_by_id(db, user_id)
@@ -102,8 +114,12 @@ class AuthService(AuthServiceInterface):
 
         return {"access_token": new_access_token, "token_type": "bearer"}
 
-    async def customer_login(self, db: AsyncSession, email: str, password: str):
-        customer = await self.customer_repository.get_customer_by_email(db, email)
+    async def customer_login(
+        self, db: AsyncSession, email: str, password: str
+    ) -> dict[str, str]:
+        customer: Customer | None = await self.customer_repository.get_customer_by_email(
+            db, email
+        )
 
         if not customer or not verify_password(password, customer.password):
             raise HTTPException(
@@ -117,9 +133,13 @@ class AuthService(AuthServiceInterface):
                 detail="Customer account is inactive",
             )
 
-        access_token = create_access_token(user_id=customer.id, user_type="customer")
+        access_token: str = create_access_token(
+            user_id=customer.id, user_type="customer"
+        )
 
-        refresh_token = create_refresh_token(user_id=customer.id, user_type="customer")
+        refresh_token: str = create_refresh_token(
+            user_id=customer.id, user_type="customer"
+        )
 
         return {
             "access_token": access_token,
